@@ -1,0 +1,39 @@
+<div id="assigned-user-view"
+     class="border border-gray-200 rounded-lg p-3 hover:border-blue-300 cursor-pointer transition-colors"
+     hx-on:click="this.classList.add('hidden'); document.getElementById('assigned-user-edit').classList.remove('hidden'); document.querySelector('#assigned-user-edit select').focus();">
+    {% if task.assigned_user %}
+        <div class="text-gray-900">{{ task.assigned_user.username }}</div>
+    {% else %}
+        <div class="text-gray-500 italic">Click to assign someone...</div>
+    {% endif %}
+</div>
+
+<form id="assigned-user-edit" class="hidden"
+      hx-post="{% url 'update_task_field' task_id=task.id field_name='assigned_user' %}"
+      hx-target="#assigned-user-field" hx-swap="innerHTML">
+    <select name="assigned_user_id" 
+            class="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <option value="">No one assigned</option>
+        <option value="{{ task.workspace.owner.id }}" {% if task.assigned_user == task.workspace.owner %}selected{% endif %}>
+            {{ task.workspace.owner.username }} (Owner)
+        </option>
+        {% for member in task.workspace.members.all %}
+            {% if member.user != task.workspace.owner %}
+                <option value="{{ member.user.id }}" {% if task.assigned_user == member.user %}selected{% endif %}>
+                    {{ member.user.username }}
+                </option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <div class="flex gap-2 mt-2">
+        <button type="submit" 
+                class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm transition-colors">
+            Save
+        </button>
+        <button type="button" 
+                class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+                hx-on:click="document.getElementById('assigned-user-edit').classList.add('hidden'); document.getElementById('assigned-user-view').classList.remove('hidden');">
+            Cancel
+        </button>
+    </div>
+</form>

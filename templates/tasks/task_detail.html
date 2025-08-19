@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ task.title }} - Task Detail{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'task_list' workspace_id=task.workspace.id %}" 
+           class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+            ← Back to {{ task.workspace.name }}
+        </a>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm" id="task-detail">
+        <div class="mb-6">
+            <h1 id="task-title" class="text-3xl font-bold text-gray-900 cursor-pointer hover:bg-gray-50 p-2 rounded" 
+                onclick="editField('title')">{{ task.title }}</h1>
+            
+            <div class="text-sm text-gray-600 mt-4 space-y-1">
+                <div><span class="font-medium">Workspace:</span> {{ task.workspace.name }}</div>
+                <div><span class="font-medium">Created by:</span> {{ task.created_by.username }}</div>
+                <div><span class="font-medium">Created:</span> {{ task.created_at|date:"M d, Y g:i A" }}</div>
+                <div id="updated-at"><span class="font-medium">Updated:</span> {{ task.updated_at|date:"M d, Y g:i A" }}</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description:</label>
+                    <div id="task-description" 
+                         class="min-h-[100px] p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                         onclick="editField('description')">
+                        {{ task.description|default:"Click to add description..." }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status:</label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="task-completed" 
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               {% if task.completed %}checked{% endif %}>
+                        <span class="ml-3 {% if task.completed %}text-green-600 font-medium{% else %}text-gray-600{% endif %}" id="completed-label">
+                            {% if task.completed %}Completed{% else %}In Progress{% endif %}
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Assigned to:</label>
+                    <select id="task-assigned-user" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Unassigned</option>
+                        <option value="{{ task.workspace.owner.id }}" 
+                                {% if task.assigned_user == task.workspace.owner %}selected{% endif %}>
+                            {{ task.workspace.owner.username }} (Owner)
+                        </option>
+                        {% for member in workspace_members %}
+                            {% if member.user != task.workspace.owner %}
+                                <option value="{{ member.user.id }}" 
+                                        {% if task.assigned_user == member.user %}selected{% endif %}>
+                                    {{ member.user.username }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Due Date:</label>
+                    <input type="datetime-local" id="task-due-date" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Time (minutes):</label>
+                    <input type="number" id="task-estimated-time" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           value="{{ task.estimated_time|default:'' }}"
+                           min="0">
+                </div>
+
+                {% if task.ai_estimated_time %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">AI Time Estimate:</label>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        {{ task.ai_estimated_time }} minutes
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+<script src="{% static 'js/task-detail.js' %}"></script>
+<script>
+// Initialize the task detail manager
+document.addEventListener('DOMContentLoaded', function() {
+    const taskData = {
+        id: {{ task.id }},
+        title: "{{ task.title|escapejs }}",
+        description: "{{ task.description|escapejs }}",
+        completed: {{ task.completed|yesno:"true,false" }},
+        assigned_user_id: {{ task.assigned_user.id|default:"null" }},
+        due_date: "{{ task.due_date|date:'Y-m-d\TH:i'|default:'' }}",
+        estimated_time: {{ task.estimated_time|default:"null" }},
+    };
+    
+    initTaskDetail(taskData);
+});
+</script>
+{% endblock %}

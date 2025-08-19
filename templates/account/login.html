@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+
+{% block title %}Login - Todos App{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-20 text-center">
+    <h1 class="text-3xl font-bold mb-4">Welcome to Todos</h1>
+    <p class="text-gray-600 mb-6">Sign in to get started</p>
+    
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+        <a href="{% provider_login_url 'google' %}" 
+           class="inline-block px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+            Sign in with Google
+        </a>
+    {% else %}
+        <p class="text-gray-500">Google OAuth not configured</p>
+        <a href="/admin/" class="text-blue-500">Admin Login</a>
+    {% endif %}
+</div>
+{% endblock %}

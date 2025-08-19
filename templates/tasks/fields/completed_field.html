@@ -1,0 +1,17 @@
+<form hx-post="{% url 'update_task_field' task_id=task.id field_name='completed' %}"
+      hx-target="#completed-field"
+      hx-swap="innerHTML"
+      hx-trigger="change">
+    <label class="inline-flex items-center cursor-pointer">
+        <input type="checkbox" name="completed" 
+               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+               {% if task.completed %}checked{% endif %}>
+        <span class="ml-3 text-gray-900">
+            {% if task.completed %}
+                <span class="text-green-600 font-medium">Completed</span>
+            {% else %}
+                <span class="text-gray-600">Mark as completed</span>
+            {% endif %}
+        </span>
+    </label>
+</form>

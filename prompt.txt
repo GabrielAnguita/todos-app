@@ -1,0 +1,31 @@
+We'll create a Django app for handling todos.
+
+I want to handle the auth logic with django allauth, using google Oauth2.
+No other authentication will be allowed. I want to use a custom User model that inherits
+from Django's default. Once a successful sign in is produced, I want to create a user
+if there is none for a given email.
+
+I want to let users create workspaces, and invite other users (create Invites). A Workspace has an owner,
+and there must be a WorkspaceMember model that references both a workspace and a user.
+If no user exists for a given Invite, don't tell.
+
+When being part of a Workspace, one can create Tasks. The tasks always have a Title, a description. They can
+have an assigned user, a due date, and an estimated time to accomplish.
+
+The main view will be a list of tasks for a given workspace. If the user is not part of any workspace then
+just show a button to create a new one. In this list view one can add tasks, mark tasks as completed, go to
+edit a task.
+
+In the detail view one can see and edit all other attributes IN place, except comments made by other users.
+
+Use htmx with ws extension and django channels for live updates of both the task list and
+task detail. Keep it MINIMAL but FUNCTIONAL as this a proof of concept. If there is a version
+mismatch, just overwrite. Use Redis for the channel layer.
+
+After a task is created, we'll spin up a Celery task that will call OpenAI with all the info we
+have about the Task and ask the LLM to estimate the time to accomplish the task. There will
+be a button in the Task detail that will allow us to ask for a new estimation. We can override
+the LLM generated estimation with our own. Celery will use the same Redis instance as task queue.
+
+Use docker compose for the dev environment, with an image for django, one for Redis and one for postgres.
+For the test deployment we'll use GCP
