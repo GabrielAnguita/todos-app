@@ -37,10 +37,10 @@
                 </button>
             </div>
             
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">Assigned to:</span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <span class="text-sm font-medium text-gray-700 flex-shrink-0">Assigned to:</span>
                 <select id="task-assigned-user" 
-                        class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 sm:min-w-[150px]">
                     <option value="" {% if not task.assigned_user %}selected{% endif %}>Unassigned</option>
                     <option value="{{ task.workspace.owner.id }}" 
                             {% if task.assigned_user == task.workspace.owner %}selected{% endif %}>
