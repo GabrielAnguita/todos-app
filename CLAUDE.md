@@ -156,7 +156,7 @@ OPENAI_API_KEY=your-openai-api-key-here
 ### Production Configuration
 For production, update:
 ```bash
-SITE_DOMAIN=yourdomain.com
+SITE_DOMAIN=bananatasks.app
 DEBUG=False
 SECRET_KEY=your-secure-secret-key
 ```
@@ -240,12 +240,19 @@ docker-compose ps
 ```
 
 ### URLs
-- **Live App**: http://34.46.123.23.nip.io
+- **Live App**: https://bananatasks.app
+- **Alternative**: https://www.bananatasks.app
 - **GitHub Repo**: https://github.com/GabrielAnguita/todos-app.git
 
 ### Services Running
 - **Django app** (with Channels WebSockets)
 - **PostgreSQL** database
 - **Redis** (Channels + Celery)
-- **Nginx** (static files + proxy)
+- **Nginx** (HTTPS proxy + static files)
 - **Celery** worker (AI estimation)
+
+### HTTPS Configuration
+- **Domain**: bananatasks.app (with www redirect)
+- **SSL**: Let's Encrypt certificates with auto-renewal
+- **Security**: HSTS, security headers, CSRF protection
+- **Firewall**: Ports 80 (HTTP) and 443 (HTTPS) open

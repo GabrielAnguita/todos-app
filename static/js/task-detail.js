@@ -66,9 +66,9 @@ class TaskDetailManager {
         const statusToggle = document.getElementById('task-status-toggle');
         if (statusToggle) {
             statusToggle.addEventListener('click', (e) => {
-                // Toggle the completion state
-                const isCompleted = statusToggle.textContent.trim().includes('Completed');
-                this.updateField('completed', !isCompleted);
+                // Toggle based on current task data, not button text
+                const newCompletedState = !this.taskData.completed;
+                this.updateField('completed', newCompletedState);
             });
         }
 
@@ -228,9 +228,9 @@ class TaskDetailManager {
 
         // Completed status button
         const statusToggle = document.getElementById('task-status-toggle');
-        if (statusToggle && !this.isEditing.completed) {
+        if (statusToggle) {
             const isCompleted = !!task.completed;
-            statusToggle.textContent = isCompleted ? '✓ Completed' : 'In Progress';
+            statusToggle.textContent = isCompleted ? '✓ Completed' : 'Pending';
             statusToggle.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
                 isCompleted 
                     ? 'bg-green-100 text-green-800 hover:bg-green-200'

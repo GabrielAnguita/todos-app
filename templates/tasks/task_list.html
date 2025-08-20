@@ -29,20 +29,19 @@
     <!-- Task list -->
     <div class="space-y-4" id="task-list">
         {% for task in tasks %}
-            <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow" 
-                 id="task-{{ task.id }}">
-                <div class="flex items-start justify-between">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer" 
+                 id="task-{{ task.id }}"
+                 onclick="navigateToTask({{ task.id }})">
+                <div class="flex items-start justify-between p-6">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
                             <input type="checkbox" 
                                    class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                    {% if task.completed %}checked{% endif %}
-                                   onchange="updateTaskCompletion({{ task.id }}, this.checked)">
+                                   onchange="updateTaskCompletion({{ task.id }}, this.checked)"
+                                   onclick="event.stopPropagation()">
                             <h3 class="text-lg font-medium text-gray-900 {% if task.completed %}line-through text-gray-500{% endif %}">
-                                <a href="{% url 'task_detail' task_id=task.id %}" 
-                                   class="hover:text-blue-600 transition-colors">
-                                    {{ task.title }}
-                                </a>
+                                {{ task.title }}
                             </h3>
                         </div>
                         
@@ -73,7 +72,7 @@
                             </span>
                         {% else %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                In Progress
+                                Pending
                             </span>
                         {% endif %}
                         
@@ -217,7 +216,7 @@ function updateTaskCompletionUI(taskId, completed) {
     }
     
     if (badge) {
-        badge.textContent = completed ? '✓ Completed' : 'In Progress';
+        badge.textContent = completed ? '✓ Completed' : 'Pending';
         badge.className = completed
             ? 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'
             : 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
@@ -293,13 +292,11 @@ function removeTaskFromList(taskId) {
     }
 }
 
-// Handle WebSocket close - no auto-reload
-ws.onclose = function(event) {
-    console.log('WebSocket connection closed');
-};
+// WebSocket handlers are now managed in base.html
 
-ws.onerror = function(error) {
-    console.error('WebSocket error:', error);
-};
+// Navigate to task detail when card is clicked
+function navigateToTask(taskId) {
+    window.location.href = `/tasks/${taskId}/`;
+}
 </script>
 {% endblock %}

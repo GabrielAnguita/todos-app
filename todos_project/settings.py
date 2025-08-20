@@ -260,3 +260,9 @@ LOGGING = {
         },
     },
 }
+
+# CSRF settings for production domain
+CSRF_TRUSTED_ORIGINS = [
+    'https://bananatasks.app',
+    'https://www.bananatasks.app',
+]
