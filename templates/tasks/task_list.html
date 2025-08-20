@@ -1,50 +1,29 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load workspace_extras %}
 
 {% block title %}{{ current_workspace.name }} - Tasks{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <!-- Header with workspace navigation -->
+<div class="max-w-6xl mx-auto" x-data="{ showCreateModal: false }" x-init="console.log('Alpine.js initialized')">
+
+    <!-- Header with workspace navigation and create task button -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">{{ current_workspace.name }}</h1>
             <p class="text-gray-600 mt-1">{{ tasks|length }} task{{ tasks|length|pluralize }}</p>
         </div>
         
-        <!-- Workspace switcher -->
-        {% if workspaces|length > 1 %}
         <div class="mt-4 sm:mt-0">
-            <select onchange="location.href='/workspace/' + this.value + '/'" 
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                {% for workspace in workspaces %}
-                    <option value="{{ workspace.id }}" {% if workspace == current_workspace %}selected{% endif %}>
-                        {{ workspace.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Create task form -->
-    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Create New Task</h2>
-        <form method="post" action="{% url 'create_task' workspace_id=current_workspace.id %}" class="space-y-4">
-            {% csrf_token %}
-            <div>
-                {{ create_form.title.label_tag }}
-                {{ create_form.title }}
-            </div>
-            <div>
-                {{ create_form.description.label_tag }}
-                {{ create_form.description }}
-            </div>
-            <button type="submit" 
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
-                Create Task
+            <!-- Create task button -->
+            <button @click="showCreateModal = true; console.log('Button clicked, showCreateModal:', showCreateModal)" 
+                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Task
             </button>
-        </form>
+        </div>
     </div>
 
     <!-- Task list -->
@@ -82,7 +61,7 @@
                                 <span>Due {{ task.due_date|date:"M d, Y" }}</span>
                             {% endif %}
                             {% if task.estimated_time %}
-                                <span>{{ task.estimated_time }}min</span>
+                                Estimated time: <span>{{ task.estimated_time }}</span>
                             {% endif %}
                         </div>
                     </div>
@@ -99,9 +78,11 @@
                         {% endif %}
                         
                         {% if task.assigned_user %}
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            {% with user_colors|get_item:task.assigned_user.id as assigned_user_color %}
+                            <div class="w-8 h-8 {{ assigned_user_color|default:'bg-blue-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium">
                                 {{ task.assigned_user.username|first|upper }}
                             </div>
+                            {% endwith %}
                         {% endif %}
                     </div>
                 </div>
@@ -113,23 +94,84 @@
             </div>
         {% endfor %}
     </div>
+
+    <!-- Create Task Modal -->
+    <div x-show="showCreateModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="showCreateModal = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div @click.stop 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-90"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-90"
+                 class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Create New Task</h3>
+                        <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form method="post" action="{% url 'create_task' workspace_id=current_workspace.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="workspace_select" class="block text-sm font-medium text-gray-700 mb-2">Workspace</label>
+                            <select id="workspace_select" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% for workspace in workspaces %}
+                                    <option value="{{ workspace.id }}" {% if workspace == current_workspace %}selected{% endif %}>
+                                        {{ workspace.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="id_title" class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                            <input type="text" name="title" id="id_title" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Enter task title..." required>
+                        </div>
+                        <div>
+                            <label for="id_description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea name="description" id="id_description" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Enter task description..."></textarea>
+                        </div>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" @click="showCreateModal = false" 
+                                    class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                                Create Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </div>
 
-<script>
-// WebSocket connection for real-time updates
-const ws = new WebSocket(`ws://${location.host}/ws/workspace/{{ current_workspace.id }}/`);
 
-ws.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    
-    if (data.type === 'task_created') {
-        location.reload(); // Simple approach - could be more sophisticated
-    } else if (data.type === 'task_updated') {
-        updateTaskInList(data.task);
-    } else if (data.type === 'task_deleted') {
-        removeTaskFromList(data.task_id);
-    }
-};
+<script>
+// Task list functions - WebSocket connection handled in base.html
 
 // Update task completion status optimistically
 function updateTaskCompletion(taskId, completed) {
@@ -183,8 +225,65 @@ function updateTaskCompletionUI(taskId, completed) {
 }
 
 function updateTaskInList(task) {
+    const taskElement = document.getElementById(`task-${task.id}`);
+    if (!taskElement) return;
+    
+    // Update completion status
     updateTaskCompletionUI(task.id, task.completed);
-    // Could update other fields like title, description, etc.
+    
+    // Update title
+    const titleElement = taskElement.querySelector('h3 a');
+    if (titleElement && task.title) {
+        titleElement.textContent = task.title;
+    }
+    
+    // Update description
+    const descriptionElement = taskElement.querySelector('p');
+    if (task.description) {
+        if (!descriptionElement) {
+            // Create description element if it doesn't exist
+            const descContainer = taskElement.querySelector('.flex-1');
+            const newDesc = document.createElement('p');
+            newDesc.className = 'text-gray-600 text-sm mb-3' + (task.completed ? ' line-through' : '');
+            descContainer.insertBefore(newDesc, descContainer.querySelector('.flex.items-center.gap-4'));
+        }
+        const desc = descriptionElement || taskElement.querySelector('p');
+        desc.textContent = task.description.length > 100 ? 
+            task.description.substring(0, 100) + '...' : task.description;
+        desc.style.display = 'block';
+    } else if (descriptionElement) {
+        descriptionElement.style.display = 'none';
+    }
+    
+    // Update metadata section (created, assigned, due date, estimated time)
+    const metadataContainer = taskElement.querySelector('.flex.items-center.gap-4.text-xs.text-gray-500');
+    if (metadataContainer) {
+        let metadataHTML = `<span>Created ${task.updated_at ? new Date(task.updated_at).toLocaleDateString() : 'recently'} ago</span>`;
+        
+        if (task.assigned_user_name) {
+            metadataHTML += `<span>Assigned to ${task.assigned_user_name}</span>`;
+        }
+        
+        if (task.due_date) {
+            const dueDate = new Date(task.due_date);
+            metadataHTML += `<span>Due ${dueDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>`;
+        }
+        
+        if (task.estimated_time) {
+            metadataHTML += `Estimated time: <span>${task.estimated_time}</span>`;
+        }
+        
+        metadataContainer.innerHTML = metadataHTML;
+    }
+    
+    // Update assignment avatar
+    const avatarDiv = taskElement.querySelector('.w-8.h-8');
+    if (task.assigned_user_name && avatarDiv) {
+        avatarDiv.textContent = task.assigned_user_name.charAt(0).toUpperCase();
+        avatarDiv.style.display = 'flex';
+    } else if (avatarDiv) {
+        avatarDiv.style.display = 'none';
+    }
 }
 
 function removeTaskFromList(taskId) {
@@ -194,11 +293,13 @@ function removeTaskFromList(taskId) {
     }
 }
 
-// Reconnect WebSocket on close
-ws.onclose = function() {
-    setTimeout(function() {
-        location.reload(); // Simple reconnection strategy
-    }, 3000);
+// Handle WebSocket close - no auto-reload
+ws.onclose = function(event) {
+    console.log('WebSocket connection closed');
+};
+
+ws.onerror = function(error) {
+    console.error('WebSocket error:', error);
 };
 </script>
 {% endblock %}

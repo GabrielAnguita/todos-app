@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'accounts.middleware.OAuthDebugMiddleware',
 ]
 
 ROOT_URLCONF = 'todos_project.urls'
@@ -84,6 +85,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'todos_project.context_processors.workspace_context',
             ],
         },
     },
@@ -139,6 +141,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Static files settings for production
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -147,40 +153,32 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
-# Django Allauth
+# Django Allauth - Google Only Setup
 SITE_ID = 1
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_SIGNUP_FORM_CLASS = None
-ACCOUNT_FORMS = {}
-SOCIALACCOUNT_ONLY = True
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
-ACCOUNT_LOGIN_ON_GET = True
-ACCOUNT_LOGOUT_ON_GET = True
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'  # Show login page with Google button
 
-# Social Auth
+# Don't use local accounts
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Rely on Google's verified email claim
+
+# Auto-create user on first Google login
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_STORE_TOKENS = False
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'OAUTH_PKCE_ENABLED': True,
-        'APP': {
-            'client_id': env('GOOGLE_OAUTH_CLIENT_ID', default=''),
-            'secret': env('GOOGLE_OAUTH_CLIENT_SECRET', default=''),
-        }
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'prompt': 'consent'},
     }
 }
 
-SOCIALACCOUNT_LOGIN_ON_GET = True
+# Enforce Google-only with custom adapters
+ACCOUNT_ADAPTER = 'accounts.adapter.GoogleOnlyAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'accounts.adapter.GoogleOnlySocialAdapter'
 
 # Django Channels
 ASGI_APPLICATION = 'todos_project.asgi.application'
@@ -218,4 +216,47 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+}
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'allauth': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'allauth.socialaccount': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'allauth.socialaccount.providers.google': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }

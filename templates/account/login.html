@@ -10,10 +10,13 @@
     
     {% get_providers as socialaccount_providers %}
     {% if socialaccount_providers %}
-        <a href="{% provider_login_url 'google' %}" 
-           class="inline-block px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-            Sign in with Google
-        </a>
+        <form method="post" action="{% provider_login_url 'google' %}">
+            {% csrf_token %}
+            <button type="submit" 
+                    class="inline-block px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                Sign in with Google
+            </button>
+        </form>
     {% else %}
         <p class="text-gray-500">Google OAuth not configured</p>
         <a href="/admin/" class="text-blue-500">Admin Login</a>

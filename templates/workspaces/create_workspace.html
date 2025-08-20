@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Create Workspace - Todos App{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-20">
+    <!-- Pending Invites Section -->
+    {% if user_pending_invites %}
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-center">You Have Pending Invitations</h2>
+        <p class="text-gray-600 mb-6 text-center">Accept an invitation to join an existing workspace, or create your own below.</p>
+        
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div class="space-y-4">
+                {% for invite in user_pending_invites %}
+                <div class="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex-1">
+                        <div class="font-medium text-gray-900">{{ invite.workspace.name }}</div>
+                        <div class="text-sm text-gray-500">
+                            Invited {{ invite.created_at|timesince }} ago by {{ invite.invited_by.first_name|default:invite.invited_by.username }}
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 ml-4">
+                        <button onclick="handleInvite({{ invite.id }}, 'accept')" 
+                                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors">
+                            Accept
+                        </button>
+                        <button onclick="handleInvite({{ invite.id }}, 'reject')" 
+                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Create Workspace Section -->
+    <div class="max-w-md mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">
+            {% if user_pending_invites %}Or Create Your Own Workspace{% else %}Create Your First Workspace{% endif %}
+        </h1>
+        {% if not user_pending_invites %}
+        <p class="text-gray-600 mb-6 text-center">Workspaces help you organize your tasks and collaborate with others.</p>
+        {% endif %}
+        
+        <form method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="id_name" class="block text-gray-700 text-sm font-bold mb-2">
+                    Workspace Name
+                </label>
+                <input type="text" 
+                       name="name" 
+                       id="id_name" 
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       placeholder="My Workspace"
+                       required>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <button type="submit" 
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+                    Create Workspace
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

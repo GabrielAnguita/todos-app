@@ -10,12 +10,16 @@ class TaskConsumer(AsyncWebsocketConsumer):
         self.task_id = self.scope['url_route']['kwargs']['task_id']
         self.room_group_name = f'task_{self.task_id}'
         
+        print(f"TaskConsumer connect: task_id={self.task_id}, user={self.scope['user']}")
+        
         if self.scope["user"] == AnonymousUser():
+            print("TaskConsumer: Anonymous user, closing connection")
             await self.close()
             return
             
         has_access = await self.check_task_access()
         if not has_access:
+            print(f"TaskConsumer: User {self.scope['user']} has no access to task {self.task_id}")
             await self.close()
             return
 
@@ -23,6 +27,7 @@ class TaskConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        print(f"TaskConsumer: User {self.scope['user']} connected to task {self.task_id}")
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -46,9 +51,13 @@ class TaskConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def check_task_access(self):
         Task = apps.get_model('tasks', 'Task')
+        WorkspaceMember = apps.get_model('workspaces', 'WorkspaceMember')
         try:
             task = Task.objects.select_related('workspace').get(id=self.task_id)
-            return self.scope["user"].has_perm('workspaces.view_workspace', task.workspace)
+            user = self.scope["user"]
+            # Check if user is owner or member of the workspace
+            return (task.workspace.owner == user or 
+                    WorkspaceMember.objects.filter(workspace=task.workspace, user=user).exists())
         except Task.DoesNotExist:
             return False
 
@@ -100,8 +109,12 @@ class WorkspaceConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def check_workspace_access(self):
         Workspace = apps.get_model('workspaces', 'Workspace')
+        WorkspaceMember = apps.get_model('workspaces', 'WorkspaceMember')
         try:
             workspace = Workspace.objects.get(id=self.workspace_id)
-            return self.scope["user"].has_perm('workspaces.view_workspace', workspace)
+            user = self.scope["user"]
+            # Check if user is owner or member of the workspace
+            return (workspace.owner == user or 
+                    WorkspaceMember.objects.filter(workspace=workspace, user=user).exists())
         except Workspace.DoesNotExist:
             return False

@@ -5,116 +5,177 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <div class="mb-6">
+    <div class="mb-6 flex items-center justify-between">
         <a href="{% url 'task_list' workspace_id=task.workspace.id %}" 
            class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
             ← Back to {{ task.workspace.name }}
         </a>
+        
+        <button onclick="deleteTask()" 
+                class="inline-flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-7 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Delete Task
+        </button>
     </div>
 
+
     <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm" id="task-detail">
-        <div class="mb-6">
-            <h1 id="task-title" class="text-3xl font-bold text-gray-900 cursor-pointer hover:bg-gray-50 p-2 rounded" 
-                onclick="editField('title')">{{ task.title }}</h1>
-            
-            <div class="text-sm text-gray-600 mt-4 space-y-1">
-                <div><span class="font-medium">Workspace:</span> {{ task.workspace.name }}</div>
-                <div><span class="font-medium">Created by:</span> {{ task.created_by.username }}</div>
-                <div><span class="font-medium">Created:</span> {{ task.created_at|date:"M d, Y g:i A" }}</div>
-                <div id="updated-at"><span class="font-medium">Updated:</span> {{ task.updated_at|date:"M d, Y g:i A" }}</div>
+        <!-- Status and Assignment Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">Status:</span>
+                <button id="task-status-toggle" type="button" 
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
+                               {% if task.completed %}bg-green-100 text-green-800 hover:bg-green-200{% else %}bg-yellow-100 text-yellow-800 hover:bg-yellow-200{% endif %}">
+                    {% if task.completed %}
+                        ✓ Completed
+                    {% else %}
+                        In Progress
+                    {% endif %}
+                </button>
             </div>
+            
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">Assigned to:</span>
+                <select id="task-assigned-user" 
+                        class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="" {% if not task.assigned_user %}selected{% endif %}>Unassigned</option>
+                    <option value="{{ task.workspace.owner.id }}" 
+                            {% if task.assigned_user == task.workspace.owner %}selected{% endif %}>
+                        {{ task.workspace.owner.username }} (Owner)
+                    </option>
+                    {% for member in workspace_members %}
+                        {% if member.user != task.workspace.owner %}
+                            <option value="{{ member.user.id }}" 
+                                    {% if task.assigned_user == member.user %}selected{% endif %}>
+                                {{ member.user.username }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Title:</label>
+            <input type="text" id="task-title" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                   value="{{ task.title }}">
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Description:</label>
-                    <div id="task-description" 
-                         class="min-h-[100px] p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
-                         onclick="editField('description')">
-                        {{ task.description|default:"Click to add description..." }}
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status:</label>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="task-completed" 
-                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                               {% if task.completed %}checked{% endif %}>
-                        <span class="ml-3 {% if task.completed %}text-green-600 font-medium{% else %}text-gray-600{% endif %}" id="completed-label">
-                            {% if task.completed %}Completed{% else %}In Progress{% endif %}
-                        </span>
-                    </label>
+                    <textarea id="task-description" rows="6"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">{{ task.description }}</textarea>
                 </div>
             </div>
 
             <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Assigned to:</label>
-                    <select id="task-assigned-user" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="">Unassigned</option>
-                        <option value="{{ task.workspace.owner.id }}" 
-                                {% if task.assigned_user == task.workspace.owner %}selected{% endif %}>
-                            {{ task.workspace.owner.username }} (Owner)
-                        </option>
-                        {% for member in workspace_members %}
-                            {% if member.user != task.workspace.owner %}
-                                <option value="{{ member.user.id }}" 
-                                        {% if task.assigned_user == member.user %}selected{% endif %}>
-                                    {{ member.user.username }}
-                                </option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Due Date:</label>
-                    <input type="datetime-local" id="task-due-date" 
+                    <input type="date" id="task-due-date" 
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                           value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                           value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Time (minutes):</label>
-                    <input type="number" id="task-estimated-time" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                           value="{{ task.estimated_time|default:'' }}"
-                           min="0">
-                </div>
-
-                {% if task.ai_estimated_time %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">AI Time Estimate:</label>
-                    <div class="bg-gray-50 rounded-lg p-3">
-                        {{ task.ai_estimated_time }} minutes
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-sm font-medium text-gray-700">Estimated Time:</label>
+                      <button
+                        type="button"
+                        id="estimate-time-btn"
+                        class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm transition-colors"
+                        data-estimate-url="{% url 'api_estimate_task' task_id=task.id %}"
+                      >
+                        Estimate
+                      </button>
                     </div>
-                </div>
-                {% endif %}
+                  
+                    <input
+                      type="text"
+                      id="task-estimated-time"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      value="{{ task.estimated_time|default_if_none:'' }}"
+                      step="1"
+                    >
+                  </div>
+                  
             </div>
         </div>
     </div>
 </div>
 
-{% csrf_token %}
-
 <script src="{% static 'js/task-detail.js' %}"></script>
 <script>
-// Initialize the task detail manager
-document.addEventListener('DOMContentLoaded', function() {
-    const taskData = {
-        id: {{ task.id }},
-        title: "{{ task.title|escapejs }}",
-        description: "{{ task.description|escapejs }}",
-        completed: {{ task.completed|yesno:"true,false" }},
-        assigned_user_id: {{ task.assigned_user.id|default:"null" }},
-        due_date: "{{ task.due_date|date:'Y-m-d\TH:i'|default:'' }}",
-        estimated_time: {{ task.estimated_time|default:"null" }},
-    };
+    function deleteTask() {
+        if (confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
+            // Show loading state
+            const deleteBtn = document.querySelector('button[onclick="deleteTask()"]');
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = 'Deleting...';
+            }
+            
+            // Make DELETE request to API
+            fetch(`/tasks/api/tasks/{{ task.id }}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to workspace after successful deletion
+                    window.location.href = "{% url 'task_list' workspace_id=task.workspace.id %}";
+                } else {
+                    throw new Error('Delete failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting task:', error);
+                alert('Failed to delete task. Please try again.');
+                // Reset button state
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = `
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-7 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Delete Task
+                    `;
+                }
+            });
+        }
+    }
     
-    initTaskDetail(taskData);
-});
+    function getCsrfToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie ? document.cookie.split('; ') : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const taskData = {
+            id: {{ task.id }},
+            title: "{{ task.title|escapejs }}",
+            description: "{{ task.description|escapejs }}",
+            completed: {{ task.completed|yesno:"true,false" }},
+            assigned_user_id: {{ task.assigned_user.id|default:"null" }},
+            due_date: "{{ task.due_date|date:'Y-m-d'|default:'' }}",
+            estimated_time: "{{ task.estimated_time|escapejs|default:'' }}"
+        };
+        window.taskDetailManager = new TaskDetailManager(taskData);
+    });
 </script>
 {% endblock %}

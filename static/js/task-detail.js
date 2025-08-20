@@ -3,48 +3,105 @@ class TaskDetailManager {
     constructor(taskData) {
         this.taskData = taskData;
         this.ws = null;
+        this.isEditing = {
+            title: false,
+            description: false,
+            assigned_user: false,
+            due_date: false,
+            estimated_time: false
+        };
         this.setupWebSocket();
         this.setupEventListeners();
     }
 
     setupWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.ws = new WebSocket(`${protocol}//${location.host}/ws/task/${this.taskData.id}/`);
-        
-        this.ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'task_updated' && data.task) {
-                this.updateTaskDisplay(data.task);
-            }
+        const wsUrl = `${protocol}//${location.host}/ws/task/${this.taskData.id}/`;
+
+        let attempts = 0;
+        const backoff = () => {
+            const base = Math.min(1000 * Math.pow(1.6, attempts), 8000);
+            const jitter = Math.random() * 300;
+            return base + jitter;
         };
 
-        this.ws.onclose = () => {
-            // Reconnect after 3 seconds
-            setTimeout(() => this.setupWebSocket(), 3000);
+        const connect = () => {
+            ('Connecting to real-time updates...', 'bg-yellow-100 text-yellow-800');
+            console.log('Attempting WebSocket connection to:', wsUrl);
+            this.ws = new WebSocket(wsUrl);
+
+            this.ws.onopen = () => {
+                attempts = 0;
+                console.log('WebSocket connected successfully');
+            };
+
+            this.ws.onmessage = (event) => {
+                console.log('WebSocket message received:', event.data);
+                const data = JSON.parse(event.data);
+                if (data.type === 'task_updated' && data.task) {
+                    this.updateTaskDisplay(data.task);
+                }
+            };
+
+            this.ws.onclose = (event) => {
+                console.log('WebSocket closed:', event.code, event.reason);
+                // Only auto-reconnect if it wasn't a normal close (1000)
+                if (event.code !== 1000) {
+                    attempts++;
+                    setTimeout(connect, backoff());
+                }
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                try { this.ws.close(); } catch {}
+            };
         };
+
+        connect();
     }
 
     setupEventListeners() {
-        // Checkbox for completion status
-        const completedCheckbox = document.getElementById('task-completed');
-        if (completedCheckbox) {
-            completedCheckbox.addEventListener('change', (e) => {
-                this.updateField('completed', e.target.checked);
+        // Status toggle button for completion
+        const statusToggle = document.getElementById('task-status-toggle');
+        if (statusToggle) {
+            statusToggle.addEventListener('click', (e) => {
+                // Toggle the completion state
+                const isCompleted = statusToggle.textContent.trim().includes('Completed');
+                this.updateField('completed', !isCompleted);
             });
         }
 
         // Select for assigned user
         const assignedUserSelect = document.getElementById('task-assigned-user');
         if (assignedUserSelect) {
+            let last = (this.taskData.assigned_user_id == null) ? '' : String(this.taskData.assigned_user_id);
+            assignedUserSelect.addEventListener('focus', () => {
+                this.isEditing.assigned_user = true;
+            });
+            assignedUserSelect.addEventListener('blur', () => {
+                this.isEditing.assigned_user = false;
+            });
             assignedUserSelect.addEventListener('change', (e) => {
-                this.updateField('assigned_user_id', e.target.value || null);
+                const next = assignedUserSelect.value;
+                if (next === last) { return; }
+                last = next;
+                this.updateField('assigned_user_id', next || null);
+                this.isEditing.assigned_user = false;
             });
         }
 
         // Date input for due date
         const dueDateInput = document.getElementById('task-due-date');
         if (dueDateInput) {
+            dueDateInput.addEventListener('focus', () => {
+                this.isEditing.due_date = true;
+            });
+            dueDateInput.addEventListener('blur', () => {
+                this.isEditing.due_date = false;
+            });
             dueDateInput.addEventListener('change', (e) => {
+                // e.target.value will be "YYYY-MM-DD" from <input type="date">
                 this.updateField('due_date', e.target.value || null);
             });
         }
@@ -52,185 +109,197 @@ class TaskDetailManager {
         // Number input for estimated time
         const estimatedTimeInput = document.getElementById('task-estimated-time');
         if (estimatedTimeInput) {
+            estimatedTimeInput.addEventListener('focus', () => {
+                this.isEditing.estimated_time = true;
+            });
+            estimatedTimeInput.addEventListener('blur', () => {
+                this.isEditing.estimated_time = false;
+            });
             estimatedTimeInput.addEventListener('change', (e) => {
-                const value = e.target.value ? parseInt(e.target.value) : null;
-                this.updateField('estimated_time', value);
+                const val = e.target.value;
+                this.updateField('estimated_time', val === '' ? null : parseInt(val, 10));
             });
         }
+
+        // Title input
+        const titleInput = document.getElementById('task-title');
+        if (titleInput) {
+            let typingTimer;
+            const saveDelay = 400;
+            titleInput.addEventListener('input', (e) => {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    this.updateField('title', e.target.value);
+                }, saveDelay);
+            });
+        }
+
+        // Description textarea
+        const descriptionTextarea = document.getElementById('task-description');
+        if (descriptionTextarea) {
+            let typingTimer;
+            const saveDelay = 500;
+            descriptionTextarea.addEventListener('input', (e) => {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    // Only send update if there's actual content (required field)
+                    if (e.target.value.trim().length > 0) {
+                        this.updateField('description', e.target.value);
+                    }
+                }, saveDelay);
+            });
+        }
+
+        // Estimate button -> POST to /api/tasks/<id>/estimate/
+        const estimateBtn = document.getElementById('estimate-time-btn');
+        if (estimateBtn) {
+            estimateBtn.addEventListener('click', () => {
+                const url = estimateBtn.dataset.estimateUrl || `/api/tasks/${this.taskData.id}/estimate/`;
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCsrfToken(),
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => {
+                    if (response.ok) {
+                        this.showMessage('AI estimation in progress...', 'success');
+                    } else {
+                        this.showMessage('Estimation failed. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error starting estimation:', error);
+                    this.showMessage('Estimation failed. Please try again.', 'error');
+                });
+            });
+        }
+
     }
 
-    // Update field optimistically and send to server
     updateField(fieldName, value) {
-        // Update local data immediately
+        // Update local cache
         this.taskData[fieldName] = value;
-        this.updateLocalUI(fieldName, value);
-        
-        // Send to server
-        const payload = {};
-        payload[fieldName] = value;
-        
-        fetch(`/tasks/api/tasks/${this.taskData.id}/`, {
+
+        // POST to server to persist field
+        fetch(`/api/tasks/${this.taskData.id}/`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': this.getCSRFToken()
+                'X-CSRFToken': this.getCsrfToken()
             },
-            body: JSON.stringify(payload)
-        }).catch(error => {
-            console.error('Update failed:', error);
-            // Could implement rollback here
-            this.showError('Failed to update task');
+            body: JSON.stringify({ [fieldName]: value })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.task) {
+                this.updateTaskDisplay(data.task);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating field:', error);
+            // Optionally, show a toast/snackbar here.
         });
     }
 
-    // Update local UI immediately (optimistic)
-    updateLocalUI(fieldName, value) {
-        switch(fieldName) {
-            case 'completed':
-                const label = document.getElementById('completed-label');
-                if (label) {
-                    label.textContent = value ? 'Completed' : 'In Progress';
-                    label.className = value ? 'ml-3 text-green-600 font-medium' : 'ml-3 text-gray-600';
-                }
-                break;
-        }
-        this.updateTimestamp();
-    }
-
-    // Update display when WebSocket message arrives
     updateTaskDisplay(task) {
-        // Update local data
-        Object.assign(this.taskData, task);
-        
-        // Update UI elements
-        const titleElement = document.getElementById('task-title');
-        if (titleElement) titleElement.textContent = task.title;
-        
-        const descriptionElement = document.getElementById('task-description');
-        if (descriptionElement) {
-            descriptionElement.textContent = task.description || 'Click to add description...';
+        // Sync local cache
+        this.taskData = {
+            ...this.taskData,
+            ...task
+        };
+
+        // Title
+        const titleInput = document.getElementById('task-title');
+        if (titleInput && !this.isEditing.title) {
+            titleInput.value = task.title ?? '';
         }
-        
-        const completedCheckbox = document.getElementById('task-completed');
-        if (completedCheckbox) completedCheckbox.checked = task.completed;
-        
-        const completedLabel = document.getElementById('completed-label');
-        if (completedLabel) {
-            completedLabel.textContent = task.completed ? 'Completed' : 'In Progress';
-            completedLabel.className = task.completed ? 'ml-3 text-green-600 font-medium' : 'ml-3 text-gray-600';
+
+        // Description
+        const descriptionTextarea = document.getElementById('task-description');
+        if (descriptionTextarea && !this.isEditing.description) {
+            descriptionTextarea.value = task.description ?? '';
         }
-        
+
+        // Completed status button
+        const statusToggle = document.getElementById('task-status-toggle');
+        if (statusToggle && !this.isEditing.completed) {
+            const isCompleted = !!task.completed;
+            statusToggle.textContent = isCompleted ? '✓ Completed' : 'In Progress';
+            statusToggle.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                isCompleted 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+            }`;
+        }
+
+        // Assigned user
         const assignedUserSelect = document.getElementById('task-assigned-user');
-        if (assignedUserSelect) assignedUserSelect.value = task.assigned_user_id || '';
-        
+        if (assignedUserSelect && !this.isEditing.assigned_user) {
+            const val = task.assigned_user_id == null ? '' : String(task.assigned_user_id);
+            assignedUserSelect.value = val;
+        }
+
+        // Due date (expecting server to send ISO "YYYY-MM-DD" or null)
         const dueDateInput = document.getElementById('task-due-date');
-        if (dueDateInput) {
-            dueDateInput.value = task.due_date ? task.due_date.slice(0, 16) : '';
+        if (dueDateInput && !this.isEditing.due_date) {
+            dueDateInput.value = task.due_date ?? '';
         }
-        
+
+        // Estimated time
         const estimatedTimeInput = document.getElementById('task-estimated-time');
-        if (estimatedTimeInput) estimatedTimeInput.value = task.estimated_time || '';
-        
-        this.updateTimestamp();
-    }
-
-    updateTimestamp() {
-        const timestampElement = document.getElementById('updated-at');
-        if (timestampElement) {
-            timestampElement.innerHTML = '<span class="font-medium">Updated:</span> Just now';
+        if (estimatedTimeInput && !this.isEditing.estimated_time) {
+            estimatedTimeInput.value = task.estimated_time ?? '';
         }
     }
 
-    // Simple inline editing for text fields
-    editField(fieldName) {
-        const element = document.getElementById(`task-${fieldName}`);
-        if (!element) return;
-        
-        const currentValue = this.taskData[fieldName] || '';
-        
-        if (fieldName === 'title') {
-            this.editTitle(element, currentValue);
-        } else if (fieldName === 'description') {
-            this.editDescription(element, currentValue);
+    getCsrfToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie ? document.cookie.split('; ') : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
         }
+        return '';
     }
 
-    editTitle(element, currentValue) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = currentValue;
-        input.className = 'text-3xl font-bold w-full p-2 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500';
-        
-        const saveAndRestore = () => {
-            const newValue = input.value.trim();
-            if (newValue && newValue !== currentValue) {
-                this.updateField('title', newValue);
-            }
-            element.textContent = newValue || currentValue;
-            element.onclick = () => this.editField('title');
-        };
-        
-        input.onblur = saveAndRestore;
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                saveAndRestore();
-            }
-            if (e.key === 'Escape') {
-                element.textContent = currentValue;
-                element.onclick = () => this.editField('title');
-            }
-        };
-        
-        element.replaceWith(input);
-        input.focus();
-        input.select();
-    }
+    showMessage(text, type = 'info') {
+        // Remove existing message if present
+        const existingMessage = document.getElementById('task-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
 
-    editDescription(element, currentValue) {
-        const textarea = document.createElement('textarea');
-        textarea.value = currentValue;
-        textarea.className = 'w-full min-h-[100px] p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500';
-        
-        const saveAndRestore = () => {
-            const newValue = textarea.value.trim();
-            if (newValue !== currentValue) {
-                this.updateField('description', newValue);
-            }
-            element.textContent = newValue || 'Click to add description...';
-            element.onclick = () => this.editField('description');
-        };
-        
-        textarea.onblur = saveAndRestore;
-        textarea.onkeydown = (e) => {
-            if (e.key === 'Escape') {
-                element.textContent = currentValue || 'Click to add description...';
-                element.onclick = () => this.editField('description');
-            }
-        };
-        
-        element.replaceWith(textarea);
-        textarea.focus();
-    }
+        // Create message element
+        const message = document.createElement('div');
+        message.id = 'task-message';
+        message.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${
+            type === 'success' ? 'bg-green-100 border border-green-200 text-green-800' :
+            type === 'error' ? 'bg-red-100 border border-red-200 text-red-800' :
+            'bg-blue-100 border border-blue-200 text-blue-800'
+        }`;
+        message.textContent = text;
 
-    getCSRFToken() {
-        const token = document.querySelector('[name=csrfmiddlewaretoken]');
-        return token ? token.value : '';
-    }
+        // Add to page
+        document.body.appendChild(message);
 
-    showError(message) {
-        // Simple error display - could be enhanced with toast notifications
-        console.error(message);
-        // You could add a toast notification system here
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            message.style.opacity = '0';
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.remove();
+                }
+            }, 300);
+        }, 3000);
     }
 }
 
-// Global function to initialize the task manager
-window.initTaskDetail = function(taskData) {
-    window.taskManager = new TaskDetailManager(taskData);
-    
-    // Expose editField globally for onclick handlers
-    window.editField = (fieldName) => {
-        window.taskManager.editField(fieldName);
-    };
-};
+window.TaskDetailManager = TaskDetailManager;

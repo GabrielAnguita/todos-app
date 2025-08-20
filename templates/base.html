@@ -1,3 +1,4 @@
+{% load workspace_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +8,532 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body hx-ext="ws">
-    <div class="container mx-auto max-w-4xl px-4 py-8">
-        {% block content %}{% endblock %}
+<body hx-ext="ws" x-data="{ showCreateWorkspaceModal: false, showInviteModal: false, showMobileMenu: false }">
+    {% if user.is_authenticated %}
+    <nav class="bg-gradient-to-r from-purple-600 to-blue-600 border-b">
+        <div class="container mx-auto max-w-7xl px-4 py-3 flex justify-between items-center">
+            <div class="font-semibold text-white">
+                Welcome, {{ user.first_name|default:user.email }}
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center gap-4">
+                {% if user_workspaces %}
+                <!-- Workspace switcher -->
+                <select @change="if($event.target.value === 'create_new') { showCreateWorkspaceModal = true; $event.target.selectedIndex = 0; } else if($event.target.value) { location.href='/workspace/' + $event.target.value + '/'; }" 
+                        class="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="" selected>Switch workspace</option>
+                    {% for workspace in user_workspaces %}
+                        <option value="{{ workspace.id }}">
+                            {{ workspace.name }}
+                        </option>
+                    {% endfor %}
+                    <option value="create_new">+ Create New Workspace</option>
+                </select>
+                {% endif %}
+                
+                <form method="post" action="{% url 'account_logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 rounded text-sm font-medium transition-colors border-0 cursor-pointer">
+                        Logout
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Mobile Hamburger Button -->
+            <button @click="showMobileMenu = !showMobileMenu" class="md:hidden text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div x-show="showMobileMenu" 
+             @click.away="showMobileMenu = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-2"
+             class="md:hidden bg-gradient-to-r from-purple-600 to-blue-600 border-t border-purple-500"
+             style="display: none;">
+            <div class="container mx-auto max-w-7xl px-4 py-4 space-y-4">
+                {% if user_workspaces %}
+                <!-- Mobile Workspace switcher -->
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Switch Workspace</label>
+                    <select @change="if($event.target.value === 'create_new') { showCreateWorkspaceModal = true; showMobileMenu = false; $event.target.selectedIndex = 0; } else if($event.target.value) { location.href='/workspace/' + $event.target.value + '/'; }" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="" selected>Select workspace</option>
+                        {% for workspace in user_workspaces %}
+                            <option value="{{ workspace.id }}" {% if workspace == current_workspace %}selected{% endif %}>
+                                {{ workspace.name }}
+                            </option>
+                        {% endfor %}
+                        <option value="create_new">+ Create New Workspace</option>
+                    </select>
+                </div>
+                {% endif %}
+                
+                <!-- Mobile Logout -->
+                <form method="post" action="{% url 'account_logout' %}" class="w-full">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="w-full px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 rounded text-sm font-medium transition-colors">
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Create New Workspace Modal -->
+        <div x-show="showCreateWorkspaceModal" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="showCreateWorkspaceModal = false"
+             class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
+             style="display: none;">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div @click.stop 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform scale-90"
+                     x-transition:enter-end="opacity-100 transform scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 transform scale-100"
+                     x-transition:leave-end="opacity-0 transform scale-90"
+                     class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">Create New Workspace</h3>
+                            <button @click="showCreateWorkspaceModal = false" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <form method="post" action="{% url 'create_workspace' %}" class="space-y-4">
+                            {% csrf_token %}
+                            <div>
+                                <label for="navbar_workspace_name" class="block text-sm font-medium text-gray-700 mb-2">Workspace Name</label>
+                                <input type="text" name="name" id="navbar_workspace_name" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="Enter workspace name..." required>
+                            </div>
+                            <div class="flex justify-end gap-3 pt-4">
+                                <button type="button" @click="showCreateWorkspaceModal = false" 
+                                        class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                                    Create Workspace
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <div class="container mx-auto max-w-7xl px-4 py-8">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="mb-3 px-4 py-3 rounded-lg {% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800{% elif message.tags == 'info' %}bg-blue-50 border border-blue-200 text-blue-800{% else %}bg-gray-50 border border-gray-200 text-gray-800{% endif %}">
+                <div class="flex items-center justify-between">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-current opacity-50 hover:opacity-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="{% if current_workspace and user_workspaces %}lg:flex lg:gap-8{% else %}max-w-4xl mx-auto{% endif %}">
+            <!-- Main content -->
+            <div class="{% if current_workspace and user_workspaces %}flex-1 lg:max-w-4xl{% else %}w-full{% endif %}">
+                {% block content %}{% endblock %}
+            </div>
+            
+            <!-- Workspace members sidebar - Desktop -->
+            {% if current_workspace and user_workspaces %}
+            <div class="hidden lg:block w-64 flex-shrink-0">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-8">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ current_workspace.name }} Members</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Workspace owner -->
+                        <div class="flex items-center gap-3">
+                            {% with user_colors|get_item:current_workspace.owner.id as owner_color %}
+                            <div class="w-8 h-8 {{ owner_color|default:'bg-purple-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                {{ current_workspace.owner.username|first|upper }}
+                            </div>
+                            {% endwith %}
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900 truncate">
+                                    {{ current_workspace.owner.first_name|default:current_workspace.owner.username }}
+                                    {% if current_workspace.owner == user %}
+                                        <span class="text-xs text-blue-600 font-medium">(You)</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-gray-500">Owner</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Workspace members (first 4 to make 5 total with owner) -->
+                        {% for member in current_workspace.members.all|slice:":4" %}
+                            {% if member.user != current_workspace.owner %}
+                            <div class="flex items-center gap-3">
+                                {% with user_colors|get_item:member.user.id as member_color %}
+                                <div class="w-8 h-8 {{ member_color|default:'bg-blue-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    {{ member.user.username|first|upper }}
+                                </div>
+                                {% endwith %}
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium text-gray-900 truncate">
+                                        {{ member.user.first_name|default:member.user.username }}
+                                        {% if member.user == user %}
+                                            <span class="text-xs text-blue-600 font-medium">(You)</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-xs text-gray-500">Member</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Show more indicator if there are more than 5 members -->
+                        {% if current_workspace.members.count > 4 %}
+                        <div class="text-xs text-gray-500 text-center pt-2 border-t border-gray-100">
+                            +{{ current_workspace.members.count|add:"-4" }} more member{{ current_workspace.members.count|add:"-4"|pluralize }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Add member button -->
+                        <div class="pt-3 border-t border-gray-100">
+                            <button @click="showInviteModal = true" class="w-full px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Add Member
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- My Pending Invites Section -->
+                {% if user_pending_invites %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">My Invites</h3>
+                    
+                    <div class="space-y-3">
+                        {% for invite in user_pending_invites %}
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900 truncate">
+                                    {{ invite.workspace.name }}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Invited {{ invite.created_at|timesince }} ago by {{ invite.invited_by.first_name|default:invite.invited_by.username }}
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 ml-3">
+                                <button onclick="handleInvite({{ invite.id }}, 'accept')" 
+                                        class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors">
+                                    Accept
+                                </button>
+                                <button onclick="handleInvite({{ invite.id }}, 'reject')" 
+                                        class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition-colors">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Mobile Members Section - Bottom -->
+        {% if current_workspace and user_workspaces %}
+        <div class="lg:hidden mt-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">{{ current_workspace.name }} Members</h3>
+                
+                <div class="space-y-3">
+                    <!-- Workspace owner -->
+                    <div class="flex items-center gap-3">
+                        {% with user_colors|get_item:current_workspace.owner.id as owner_color %}
+                        <div class="w-8 h-8 {{ owner_color|default:'bg-purple-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            {{ current_workspace.owner.username|first|upper }}
+                        </div>
+                        {% endwith %}
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900 truncate">
+                                {{ current_workspace.owner.first_name|default:current_workspace.owner.username }}
+                                {% if current_workspace.owner == user %}
+                                    <span class="text-xs text-blue-600 font-medium">(You)</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-gray-500">Owner</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Workspace members -->
+                    {% for member in current_workspace.members.all|slice:":4" %}
+                        {% if member.user != current_workspace.owner %}
+                        <div class="flex items-center gap-3">
+                            {% with user_colors|get_item:member.user.id as member_color %}
+                            <div class="w-8 h-8 {{ member_color|default:'bg-blue-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                {{ member.user.username|first|upper }}
+                            </div>
+                            {% endwith %}
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900 truncate">
+                                    {{ member.user.first_name|default:member.user.username }}
+                                    {% if member.user == user %}
+                                        <span class="text-xs text-blue-600 font-medium">(You)</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-gray-500">Member</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Show more indicator if there are more than 5 members -->
+                    {% if current_workspace.members.count > 4 %}
+                    <div class="text-xs text-gray-500 text-center pt-2 border-t border-gray-100">
+                        +{{ current_workspace.members.count|add:"-4" }} more member{{ current_workspace.members.count|add:"-4"|pluralize }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Add member button -->
+                    <div class="pt-3 border-t border-gray-100">
+                        <button @click="showInviteModal = true" class="w-full px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Member
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile My Pending Invites Section -->
+            {% if user_pending_invites %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">My Invites</h3>
+                
+                <div class="space-y-3">
+                    {% for invite in user_pending_invites %}
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex-1 min-w-0 mb-3 sm:mb-0">
+                            <div class="text-sm font-medium text-gray-900 truncate">
+                                {{ invite.workspace.name }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Invited {{ invite.created_at|timesince }} ago by {{ invite.invited_by.first_name|default:invite.invited_by.username }}
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button onclick="handleInvite({{ invite.id }}, 'accept')" 
+                                    class="flex-1 sm:flex-none px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors">
+                                Accept
+                            </button>
+                            <button onclick="handleInvite({{ invite.id }}, 'reject')" 
+                                    class="flex-1 sm:flex-none px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition-colors">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
+
+    <!-- Global Modals -->
+    
+    <!-- Create New Workspace Modal -->
+    <div x-show="showCreateWorkspaceModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="showCreateWorkspaceModal = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div @click.stop 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-90"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-90"
+                 class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Create New Workspace</h3>
+                        <button @click="showCreateWorkspaceModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form method="post" action="{% url 'create_workspace' %}" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="navbar_workspace_name" class="block text-sm font-medium text-gray-700 mb-2">Workspace Name</label>
+                            <input type="text" name="name" id="navbar_workspace_name" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Enter workspace name..." required>
+                        </div>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" @click="showCreateWorkspaceModal = false" 
+                                    class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                                Create Workspace
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Invite Modal -->
+    {% if current_workspace %}
+    <div x-show="showInviteModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="showInviteModal = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50"
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div @click.stop 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-90"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-90"
+                 class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Invite to {{ current_workspace.name }}</h3>
+                        <button @click="showInviteModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form method="post" action="{% url 'invite_form' workspace_id=current_workspace.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="global_invite_email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" name="email" id="global_invite_email" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Enter email address..." required>
+                        </div>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" @click="showInviteModal = false" 
+                                    class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                Send Invite
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+    // Handle invite accept/reject
+    function handleInvite(inviteId, action) {
+        if (confirm(`Are you sure you want to ${action} this invitation?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/workspaces/invites/${inviteId}/${action}/`;
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken.value;
+                form.appendChild(csrfInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // WebSocket connection for task updates
+    {% if current_workspace %}
+    const ws = new WebSocket(`ws://${location.host}/ws/workspace/{{ current_workspace.id }}/`);
+    
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'task_created') {
+            location.reload(); // Simple approach for task updates
+        } else if (data.type === 'task_updated') {
+            updateTaskInList(data.task);
+        } else if (data.type === 'task_deleted') {
+            removeTaskFromList(data.task_id);
+        }
+    };
+    
+    ws.onclose = function(event) {
+        console.log('WebSocket connection closed');
+    };
+    
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
+    {% endif %}
+    </script>
 </body>
 </html>

@@ -25,14 +25,33 @@ class WorkspaceMember(models.Model):
 
 
 class Invite(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+    
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='invites')
     email = models.EmailField()
     invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_invites')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-    accepted_at = models.DateTimeField(null=True, blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('workspace', 'email')
+        pass  # Removed unique_together to allow re-invites after rejection
 
     def __str__(self):
-        return f"Invite to {self.workspace.name} for {self.email}"
+        return f"Invite to {self.workspace.name} for {self.email} ({self.status})"
+    
+    @property
+    def is_pending(self):
+        return self.status == 'pending'
+    
+    @property
+    def is_accepted(self):
+        return self.status == 'accepted'
+    
+    @property
+    def is_rejected(self):
+        return self.status == 'rejected'

@@ -1,12 +1,13 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView, RedirectView
+from django.views.generic import ListView, DetailView, CreateView, RedirectView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.http import Http404
 from django.db import models
 from workspaces.models import Workspace, WorkspaceMember
 from .models import Task
 from .forms import TaskCreateForm
+from functools import cached_property
 
 
 class WorkspaceRedirectView(LoginRequiredMixin, RedirectView):
@@ -17,7 +18,7 @@ class WorkspaceRedirectView(LoginRequiredMixin, RedirectView):
         ).distinct()
         
         if not user_workspaces.exists():
-            return reverse('no_workspaces')
+            return reverse('create_workspace')
         
         return reverse('task_list', kwargs={'workspace_id': user_workspaces.first().id})
 
@@ -33,34 +34,28 @@ class TaskListView(LoginRequiredMixin, ListView):
             'assigned_user', 'created_by'
         ).order_by('-created_at')
     
-    def get_workspace(self):
-        user_workspaces = Workspace.objects.filter(
-            models.Q(owner=self.request.user) | 
-            models.Q(members__user=self.request.user)
-        ).distinct()
-        
-        workspace = get_object_or_404(user_workspaces, id=self.kwargs['workspace_id'])
-        return workspace
-    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        user_workspaces = Workspace.objects.filter(
-            models.Q(owner=self.request.user) | 
-            models.Q(members__user=self.request.user)
-        ).distinct()
-        
         current_workspace = self.get_workspace()
         workspace_members = current_workspace.members.select_related('user').all()
-        
         context.update({
-            'workspaces': user_workspaces,
+            'workspaces': self.user_workspaces,
             'current_workspace': current_workspace,
             'workspace_members': workspace_members,
             'create_form': TaskCreateForm(),
         })
-        
         return context
+
+    def get_workspace(self):
+        workspace = get_object_or_404(self.user_workspaces, id=self.kwargs['workspace_id'])
+        return workspace
+
+    @cached_property
+    def user_workspaces(self):
+        return Workspace.objects.filter(
+                models.Q(owner=self.request.user) | 
+                models.Q(members__user=self.request.user)
+            ).distinct()
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -111,3 +106,24 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     
     def get_success_url(self):
         return reverse('task_list', kwargs={'workspace_id': self.kwargs['workspace_id']})
+
+
+class TaskDeleteView(LoginRequiredMixin, DeleteView):
+    model = Task
+    pk_url_kwarg = 'task_id'
+    
+    def get_queryset(self):
+        return Task.objects.select_related('workspace', 'assigned_user', 'created_by')
+    
+    def get_object(self, queryset=None):
+        task = super().get_object(queryset)
+        
+        # Check permissions
+        if not (task.workspace.owner == self.request.user or 
+                WorkspaceMember.objects.filter(workspace=task.workspace, user=self.request.user).exists()):
+            raise Http404("Task not found")
+        
+        return task
+    
+    def get_success_url(self):
+        return reverse('task_list', kwargs={'workspace_id': self.object.workspace.id})
