@@ -31,7 +31,7 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 ## 📝 Notas de desarrollo
 
 - Tiempo de desarrollo: aproximadamente **10 horas**.  
-- Gran parte del código fue generado con ayuda de **Cloud Code**.  
+- Gran parte del código fue generado con ayuda de **Claude Code**.  
 
 ### Backend
 - Toda la **arquitectura** fue diseñada por mí.  
@@ -40,7 +40,7 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 
 ### Frontend y Experiencia de Usuario
 - Definí la forma en que las interacciones debían sentirse y fluir.  
-- Permití que Cloud Code explorara libremente la implementación, dados mis requerimientos.
+- Permití que Claude Code explorara libremente la implementación, dados mis requerimientos.
 - La implementación actual es **mínimamente funcional**: cumple para mostrar la experiencia, pero es **un caos técnico**.  
 - De haber sido un proyecto con un fin productivo y más tiempo de desarrollo, hubiera optado por:  
   - **React** para estructurar mejor la interfaz,  
@@ -55,10 +55,10 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 ### Despliegue
 - Decidí desplegar el proyecto en una **máquina virtual con Docker Compose**, manteniendo todas las imágenes dentro de la misma máquina.  
 - En un contexto productivo real, cada componente podría desplegarse en **nodos separados**, otorgando mayor **escalabilidad** y resiliencia.  
-- Para este despliegue, **Cloud Code fue increíblemente útil**: lo usé en conjunto con la **CLI de Google Cloud** y el proceso fue prácticamente automático.  
+- Para este despliegue, **Claude Code fue increíblemente útil**: lo usé en conjunto con la **CLI de Google Cloud** y el proceso fue prácticamente automático.  
   - Levantar la máquina virtual,  
   - Obtener un dominio,  
   - Emitir certificados SSL…  
-  Todo consistió prácticamente en **apretar ENTER y mirar cómo Cloud Code hacía el trabajo**. Fue, honestamente, **muy cómodo**.  
+  Todo consistió prácticamente en **apretar ENTER y mirar cómo Claude Code hacía el trabajo**. Fue, honestamente, **muy cómodo**.  
 
 ---
