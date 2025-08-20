@@ -491,7 +491,7 @@
     <script>
     // Handle invite accept/reject
     function handleInvite(inviteId, action) {
-        if (confirm(`Are you sure you want to ${action} this invitation?`)) {
+        if (confirm(`Are you sure you want to ${action} this invitation? (You can be part of multiple workspaces)`)) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/workspaces/invites/${inviteId}/${action}/`;
@@ -512,7 +512,8 @@
     
     // WebSocket connection for task updates
     {% if current_workspace %}
-    const ws = new WebSocket(`ws://${location.host}/ws/workspace/{{ current_workspace.id }}/`);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${location.host}/ws/workspace/{{ current_workspace.id }}/`);
     
     ws.onmessage = function(event) {
         const data = JSON.parse(event.data);
@@ -520,9 +521,15 @@
         if (data.type === 'task_created') {
             location.reload(); // Simple approach for task updates
         } else if (data.type === 'task_updated') {
-            updateTaskInList(data.task);
+            // Only call if function exists (task list page)
+            if (typeof updateTaskInList === 'function') {
+                updateTaskInList(data.task);
+            }
         } else if (data.type === 'task_deleted') {
-            removeTaskFromList(data.task_id);
+            // Only call if function exists (task list page)
+            if (typeof removeTaskFromList === 'function') {
+                removeTaskFromList(data.task_id);
+            }
         }
     };
     
