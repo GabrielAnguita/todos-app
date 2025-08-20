@@ -31,12 +31,13 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 ## 📝 Notas de desarrollo
 
 - Tiempo de desarrollo: aproximadamente **10 horas**.  
-- Gran parte del código fue generado con ayuda de **Claude Code**.  
+- Gran parte del código fue generado con ayuda de **Claude Code**.
 
 ### Backend
 - Toda la **arquitectura** fue diseñada por mí.  
 - Todas las **decisiones técnicas** fueron tomadas por mí.  
-- Decidí usar **Redis** como **cola de tareas para Celery** y también como **channel layer para WebSockets**, lo que permitió simplificar la infraestructura y habilitar el **fanout de actualizaciones de tareas en tiempo real**.  
+- Decidí usar **Redis** como **cola de tareas para Celery** y también como **channel layer para WebSockets**, lo que permitió simplificar la infraestructura y habilitar el **fanout de actualizaciones de tareas en tiempo real**.
+- Cada línea fue leída por mi, teniendo que instruir varias veces a Claude para que cambiara de enfoque, o a veces simplemente tomé yo el mando para mostrarle el camino.
 
 ### Frontend y Experiencia de Usuario
 - Definí la forma en que las interacciones debían sentirse y fluir.  
@@ -45,7 +46,8 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 - De haber sido un proyecto con un fin productivo y más tiempo de desarrollo, hubiera optado por:  
   - **React** para estructurar mejor la interfaz,  
   - **TypeScript** para manejar de forma sólida la lógica del frontend, ya que este proyecto tiene **mucha lógica del lado del cliente**.  
-- En este estado, el frontend simplemente muestra el **punto de la experiencia de usuario** que quería ilustrar.  
+- En este estado, el frontend simplemente muestra el **punto de la experiencia de usuario** que quería ilustrar.
+- No leí el código, me preocupé de que funcionara.
 
 ### Tests
 - Este proyecto **no tiene ningún test automatizado**.  
