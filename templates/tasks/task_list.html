@@ -32,53 +32,53 @@
             <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer" 
                  id="task-{{ task.id }}"
                  onclick="navigateToTask({{ task.id }})">
-                <div class="flex items-start justify-between p-6">
-                    <div class="flex-1">
+                <div class="flex items-start gap-4 p-4 sm:p-6">
+                    <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 mb-2">
                             <input type="checkbox" 
-                                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
                                    {% if task.completed %}checked{% endif %}
                                    onchange="updateTaskCompletion({{ task.id }}, this.checked)"
                                    onclick="event.stopPropagation()">
-                            <h3 class="text-lg font-medium text-gray-900 {% if task.completed %}line-through text-gray-500{% endif %}">
+                            <h3 class="text-base sm:text-lg font-medium text-gray-900 {% if task.completed %}line-through text-gray-500{% endif %} truncate">
                                 {{ task.title }}
                             </h3>
                         </div>
                         
                         {% if task.description %}
-                            <p class="text-gray-600 text-sm mb-3 {% if task.completed %}line-through{% endif %}">
-                                {{ task.description|truncatewords:20 }}
+                            <p class="text-gray-600 text-sm mb-3 {% if task.completed %}line-through{% endif %} line-clamp-2">
+                                {{ task.description|truncatewords:15 }}
                             </p>
                         {% endif %}
                         
-                        <div class="flex items-center gap-4 text-xs text-gray-500">
-                            <span>Created {{ task.created_at|timesince }} ago</span>
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                            <span class="whitespace-nowrap">{{ task.created_at|timesince }} ago</span>
                             {% if task.assigned_user %}
-                                <span>Assigned to {{ task.assigned_user.username }}</span>
+                                <span class="whitespace-nowrap">{{ task.assigned_user.username|truncatechars:35 }}</span>
                             {% endif %}
                             {% if task.due_date %}
-                                <span>Due {{ task.due_date|date:"M d, Y" }}</span>
+                                <span class="whitespace-nowrap">Due {{ task.due_date|date:"M d" }}</span>
                             {% endif %}
                             {% if task.estimated_time %}
-                                Estimated time: <span>{{ task.estimated_time }}</span>
+                                <span class="whitespace-nowrap">⏱ {{ task.estimated_time|truncatechars:60 }}</span>
                             {% endif %}
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-2 ml-4">
+                    <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2 flex-shrink-0">
                         {% if task.completed %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
                                 ✓ Completed
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
                                 Pending
                             </span>
                         {% endif %}
                         
                         {% if task.assigned_user %}
                             {% with user_colors|get_item:task.assigned_user.id as assigned_user_color %}
-                            <div class="w-8 h-8 {{ assigned_user_color|default:'bg-blue-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            <div class="w-8 h-8 {{ assigned_user_color|default:'bg-blue-500' }} rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                                 {{ task.assigned_user.username|first|upper }}
                             </div>
                             {% endwith %}
