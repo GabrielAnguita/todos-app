@@ -11,7 +11,8 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 - Colaboración en tiempo real (sin necesidad de refrescar la página).  
 - Arquitectura escalable usando **Redis** como channel layer para WebSockets.  
 - **Redis** también se utilizó como **cola de tareas** para **Celery**, unificando la infraestructura.  
-- Fanout de actualizaciones de tareas en tiempo real gracias a Redis Channels.  
+- Fanout de actualizaciones de tareas en tiempo real gracias a Redis Channels.
+- Autenticación mediante Google OAuth.
 
 ---
 
