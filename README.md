@@ -30,29 +30,27 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 
 ## 📝 Notas de desarrollo
 
-- Tiempo de desarrollo: aproximadamente **10 horas**.  
-- Gran parte del código fue generado con ayuda de **Claude Code**. (Iniciado con el archivo prompt.txt)
+Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo claro:  
+**probar una idea de experiencia de usuario y una arquitectura backend sólida en poco tiempo.**
+
+- Gran parte del código fue generado con **Cloud Code**, lo que permitió acelerar la implementación.  
 
 ### Backend
 - Toda la **arquitectura** fue diseñada por mí.  
 - Todas las **decisiones técnicas** fueron tomadas por mí.  
-- Decidí usar **Redis** como **cola de tareas para Celery** y también como **channel layer para WebSockets**, lo que permitió simplificar la infraestructura y habilitar el **fanout de actualizaciones de tareas en tiempo real**.
-- Cada línea fue leída por mi, teniendo que instruir varias veces a Claude para que cambiara de enfoque, o a veces simplemente tomé yo el mando para mostrarle el camino.
+- Usé **Redis** tanto como **cola de tareas para Celery** como **channel layer para WebSockets**, simplificando infraestructura y habilitando el **fanout de actualizaciones en tiempo real**.  
+- La arquitectura fue pensada desde el principio para ser escalable: hoy corre en un solo nodo, pero puede distribuirse en múltiples nodos sin cambios de diseño.  
 
-### Frontend y Experiencia de Usuario
-- Definí la forma en que las interacciones debían sentirse y fluir.  
-- Permití que Claude Code explorara libremente la implementación, dados mis requerimientos.
-- La implementación actual es **mínimamente funcional**: cumple para mostrar la experiencia, pero es **un caos técnico**.  
-- De haber sido un proyecto con un fin productivo y más tiempo de desarrollo, hubiera optado por:  
-  - **React** para estructurar mejor la interfaz,  
-  - **TypeScript** para manejar de forma sólida la lógica del frontend, ya que este proyecto tiene **mucha lógica del lado del cliente**.  
-- En este estado, el frontend simplemente muestra el **punto de la experiencia de usuario** que quería ilustrar.
-- No leí el código, me preocupé de que funcionara.
+### Frontend
+- Permití que Cloud Code explorara libremente la implementación.  
+- El frontend actual es **mínimamente funcional** y sirve solo para ilustrar la experiencia.  
+- En un proyecto productivo hubiera optado por **React + TypeScript**, dado que hay bastante lógica en el cliente.  
+- La experiencia de usuario sí fue diseñada por mí: cómo debía sentirse y fluir la interacción.  
 
 ### Tests
-- Este proyecto **no tiene ningún test automatizado**.  
-- Para mí, esto hace que el código sea **inaceptable** en un contexto serio o productivo.  
-- Sin embargo, el objetivo de este trabajo no fue producir un sistema robusto, sino **demostrar una idea de experiencia de usuario**.  
+⚠️ Este proyecto **no tiene ningún test automatizado**.  
+Esto es **inaceptable en un sistema real**, pero fue una decisión consciente:  
+para un prototipo rápido de UX/arquitectura no invertí en robustez, sino en mostrar la idea.
 
 ### Despliegue
 - Decidí desplegar el proyecto en una **máquina virtual con Docker Compose**, manteniendo todas las imágenes dentro de la misma máquina.  
