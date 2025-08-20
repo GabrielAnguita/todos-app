@@ -266,3 +266,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://bananatasks.app',
     'https://www.bananatasks.app',
 ]
+
+# Force HTTPS in production
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    USE_TLS = True
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
