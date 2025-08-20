@@ -12,7 +12,6 @@ class Task(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tasks')
     due_date = models.DateField(null=True, blank=True)
     estimated_time = models.CharField(max_length=200, null=True, blank=True, help_text="Estimated time")
-    ai_estimated_time = models.PositiveIntegerField(null=True, blank=True, help_text="AI estimated time in minutes")
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

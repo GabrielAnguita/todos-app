@@ -14,18 +14,12 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
       - due_date: 'YYYY-MM-DD' or null (date-only)
     """
 
-    # Map incoming primary key to the FK field
     assigned_user_id = serializers.PrimaryKeyRelatedField(
         source='assigned_user',
         queryset=User.objects.all(),
         required=False,
         allow_null=True
     )
-
-    # Force a date-only API for due_date
-    due_date = serializers.DateField(required=False, allow_null=True)
-
-    # If you want the response to include the full assigned_user object, keep it read-only here
     assigned_user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -40,6 +34,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
             'description': {'required': False, 'allow_null': True, 'allow_blank': True},
             'completed': {'required': False},
             'estimated_time': {'required': False, 'allow_null': True},
+            'due_date': {'required': False, 'allow_null': True},
         }
 
     def update(self, instance, validated_data):
@@ -47,14 +42,6 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         - Accept a date for due_date even if the model field is DateTimeField.
         - Everything else uses standard ModelSerializer update.
         """
-        # If the model uses DateTimeField for due_date, convert incoming date -> midnight datetime
-        model_field = instance._meta.get_field('due_date')
-        if isinstance(model_field, djmodels.DateTimeField):
-            # Pull the date (if present) and set as datetime at 00:00:00
-            date_val = validated_data.pop('due_date', None)
-            if date_val is not None:
-                instance.due_date = datetime.combine(date_val, time.min)
-
         # Apply the rest
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
