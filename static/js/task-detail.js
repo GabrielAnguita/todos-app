@@ -26,7 +26,7 @@ class TaskDetailManager {
         };
 
         const connect = () => {
-            ('Connecting to real-time updates...', 'bg-yellow-100 text-yellow-800');
+            ('Connecting to real-time updates...', 'bg-melon/20 text-melon');
             console.log('Attempting WebSocket connection to:', wsUrl);
             this.ws = new WebSocket(wsUrl);
 
@@ -223,8 +223,8 @@ class TaskDetailManager {
             statusToggle.textContent = isCompleted ? '✓ Completed' : 'Pending';
             statusToggle.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
                 isCompleted 
-                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                    ? 'bg-pistachio/20 text-pistachio hover:bg-pistachio/30'
+                    : 'bg-melon/20 text-melon hover:bg-melon/30'
             }`;
         }
 

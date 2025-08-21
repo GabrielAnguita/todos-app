@@ -21,14 +21,14 @@
     </div>
 
 
-    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm" id="task-detail">
+    <div class="bg-slate-800 border border-steel/20 rounded-xl2 p-6 shadow-brand" id="task-detail">
         <!-- Status and Assignment Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">Status:</span>
+                <span class="text-sm font-medium text-cloud">Status:</span>
                 <button id="task-status-toggle" type="button" 
                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer
-                               {% if task.completed %}bg-green-100 text-green-800 hover:bg-green-200{% else %}bg-yellow-100 text-yellow-800 hover:bg-yellow-200{% endif %}">
+                               {% if task.completed %}bg-pistachio/20 text-pistachio hover:bg-pistachio/30{% else %}bg-melon/20 text-melon hover:bg-melon/30{% endif %}">
                     {% if task.completed %}
                         ✓ Completed
                     {% else %}
@@ -38,7 +38,7 @@
             </div>
             
             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <span class="text-sm font-medium text-gray-700 flex-shrink-0">Assigned to:</span>
+                <span class="text-sm font-medium text-cloud flex-shrink-0">Assigned to:</span>
                 <div class="w-full sm:w-auto sm:min-w-[200px]">
                     {% include 'components/user_select.html' with selected_user=task.assigned_user workspace=task.workspace field_name='assigned_user_id' user_colors=user_colors %}
                 </div>
@@ -46,36 +46,36 @@
         </div>
 
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Title:</label>
+            <label class="block text-sm font-medium text-cloud mb-2">Title:</label>
             <input type="text" id="task-title" 
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                   class="w-full px-3 py-2 border border-steel/30 rounded-xl2 focus:ring-2 focus:ring-blueberry bg-gray-600 text-gray-200"
                    value="{{ task.title }}">
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description:</label>
+                    <label class="block text-sm font-medium text-cloud mb-2">Description:</label>
                     <textarea id="task-description" rows="6"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">{{ task.description }}</textarea>
+                              class="w-full px-3 py-2 border border-steel/30 rounded-xl2 focus:ring-2 focus:ring-blueberry bg-gray-600 text-gray-200">{{ task.description }}</textarea>
                 </div>
             </div>
 
             <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Due Date:</label>
+                    <label class="block text-sm font-medium text-cloud mb-2">Due Date:</label>
                     <input type="date" id="task-due-date" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           class="w-full px-3 py-2 border border-steel/30 rounded-xl2 focus:ring-2 focus:ring-blueberry bg-gray-600 text-gray-200"
                            value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}">
                 </div>
 
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                      <label class="block text-sm font-medium text-gray-700">Estimated Time:</label>
+                      <label class="block text-sm font-medium text-cloud">Estimated Time:</label>
                       <button
                         type="button"
                         id="estimate-time-btn"
-                        class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm transition-colors"
+                        class="px-3 py-1 bg-grape hover:bg-grape/90 text-white rounded-xl2 text-sm transition-colors shadow-sm"
                         data-estimate-url="{% url 'api_estimate_task' task_id=task.id %}"
                       >
                         Estimate
@@ -85,7 +85,7 @@
                     <input
                       type="text"
                       id="task-estimated-time"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      class="w-full px-3 py-2 border border-steel/30 rounded-xl2 focus:ring-2 focus:ring-blueberry bg-gray-600 text-gray-200"
                       value="{{ task.estimated_time|default_if_none:'' }}"
                       step="1"
                     >

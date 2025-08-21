@@ -47,9 +47,9 @@ def workspace_context(request):
     # Generate consistent user colors for current workspace
     user_colors = {}
     if current_workspace:
-        # Available Tailwind colors
-        colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-red-500', 
-                 'bg-indigo-500', 'bg-pink-500', 'bg-yellow-500', 'bg-teal-500']
+        # Available custom colors from the palette
+        colors = ['bg-blueberry', 'bg-grape', 'bg-pistachio', 'bg-melon', 
+                 'bg-purple-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500']
         
         # Get all users in the workspace (owner + members)
         workspace_users = [current_workspace.owner]
