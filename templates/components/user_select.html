@@ -18,7 +18,7 @@ Usage: {% include 'components/user_select.html' with selected_user=task.assigned
                     {% endwith %}
                     <span class="block font-medium">{{ selected_user.username|default:selected_user.email }}</span>
                 {% else %}
-                    <div class="size-6 shrink-0 rounded-full bg-steel/30 flex items-center justify-center text-steel text-xs">
+                    <div class="size-6 shrink-0 rounded-full bg-gray-400 flex items-center justify-center text-gray-800 text-xs">
                         ?
                     </div>
                     <span class="block text-gray-400 italic">Select user...</span>
@@ -35,7 +35,7 @@ Usage: {% include 'components/user_select.html' with selected_user=task.assigned
             <div class="user-select-option relative cursor-default select-none py-2 pr-9 pl-3 text-gray-200 hover:bg-blueberry hover:text-white whitespace-nowrap" 
                  data-value="">
                 <div class="flex items-center">
-                    <div class="size-6 shrink-0 rounded-full bg-steel/30 flex items-center justify-center text-steel text-xs">
+                    <div class="size-6 shrink-0 rounded-full bg-gray-400 flex items-center justify-center text-gray-800 text-xs">
                         ?
                     </div>
                     <span class="ml-3 block font-normal">Unassigned</span>
