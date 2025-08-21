@@ -203,7 +203,8 @@
             <!-- Workspace members sidebar - Desktop -->
             {% if current_workspace and user_workspaces %}
             <div class="hidden lg:block w-64 flex-shrink-0">
-                <div class="bg-slate-800 rounded-xl2 shadow-brand border border-steel/20 p-4 sticky top-8">
+                <div class="sticky top-8">
+                <div class="bg-slate-800 rounded-xl2 shadow-brand border border-steel/20 p-4">
                     <h3 class="text-lg font-medium text-cloud mb-4">{{ current_workspace.name }} Members</h3>
                     
                     <div class="space-y-3">
@@ -298,6 +299,7 @@
                     </div>
                 </div>
                 {% endif %}
+                </div>
             </div>
             {% endif %}
         </div>

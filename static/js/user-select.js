@@ -127,7 +127,7 @@ class UserSelect {
             nameSpan.textContent = username;
         } else {
             // No user selected
-            avatar.className = 'size-6 shrink-0 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs';
+            avatar.className = 'size-6 shrink-0 rounded-full bg-gray-400 flex items-center justify-center text-gray-800 text-xs';
             avatar.textContent = '?';
             nameSpan.className = 'block truncate text-gray-500 italic';
             nameSpan.textContent = 'Select user...';
