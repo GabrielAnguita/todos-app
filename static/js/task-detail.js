@@ -72,22 +72,12 @@ class TaskDetailManager {
             });
         }
 
-        // Select for assigned user
-        const assignedUserSelect = document.getElementById('task-assigned-user');
-        if (assignedUserSelect) {
-            let last = (this.taskData.assigned_user_id == null) ? '' : String(this.taskData.assigned_user_id);
-            assignedUserSelect.addEventListener('focus', () => {
-                this.isEditing.assigned_user = true;
-            });
-            assignedUserSelect.addEventListener('blur', () => {
-                this.isEditing.assigned_user = false;
-            });
-            assignedUserSelect.addEventListener('change', (e) => {
-                const next = assignedUserSelect.value;
-                if (next === last) { return; }
-                last = next;
-                this.updateField('assigned_user_id', next || null);
-                this.isEditing.assigned_user = false;
+        // User select component for assigned user
+        const userSelectWrapper = document.querySelector('.user-select-wrapper');
+        if (userSelectWrapper) {
+            userSelectWrapper.addEventListener('userselect:change', (e) => {
+                const { value } = e.detail;
+                this.updateField('assigned_user_id', value || null);
             });
         }
 
@@ -238,11 +228,16 @@ class TaskDetailManager {
             }`;
         }
 
-        // Assigned user
-        const assignedUserSelect = document.getElementById('task-assigned-user');
-        if (assignedUserSelect && !this.isEditing.assigned_user) {
-            const val = task.assigned_user_id == null ? '' : String(task.assigned_user_id);
-            assignedUserSelect.value = val;
+        // Assigned user - update the custom user select component
+        const userSelectWrapper = document.querySelector('.user-select-wrapper');
+        if (userSelectWrapper && !this.isEditing.assigned_user) {
+            // Find the UserSelect instance and update it
+            const userSelectInstance = window.UserSelect && userSelectWrapper.userSelectInstance;
+            if (userSelectInstance) {
+                const assignedUser = task.assigned_user_name || '';
+                const assignedUserId = task.assigned_user_id || '';
+                userSelectInstance.setValue(assignedUserId, assignedUser);
+            }
         }
 
         // Due date (expecting server to send ISO "YYYY-MM-DD" or null)

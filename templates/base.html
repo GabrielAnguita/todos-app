@@ -9,6 +9,8 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {% load static %}
+    <script src="{% static 'js/user-select.js' %}"></script>
 </head>
 <body hx-ext="ws" x-data="{ showCreateWorkspaceModal: false, showInviteModal: false, showMobileMenu: false }">
     {% if user.is_authenticated %}

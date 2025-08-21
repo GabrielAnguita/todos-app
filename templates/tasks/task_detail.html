@@ -39,22 +39,9 @@
             
             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <span class="text-sm font-medium text-gray-700 flex-shrink-0">Assigned to:</span>
-                <select id="task-assigned-user" 
-                        class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 sm:min-w-[150px]">
-                    <option value="" {% if not task.assigned_user %}selected{% endif %}>Unassigned</option>
-                    <option value="{{ task.workspace.owner.id }}" 
-                            {% if task.assigned_user == task.workspace.owner %}selected{% endif %}>
-                        {{ task.workspace.owner.username }} (Owner)
-                    </option>
-                    {% for member in workspace_members %}
-                        {% if member.user != task.workspace.owner %}
-                            <option value="{{ member.user.id }}" 
-                                    {% if task.assigned_user == member.user %}selected{% endif %}>
-                                {{ member.user.username }}
-                            </option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+                <div class="w-full sm:w-auto sm:min-w-[200px]">
+                    {% include 'components/user_select.html' with selected_user=task.assigned_user workspace=task.workspace field_name='assigned_user_id' user_colors=user_colors %}
+                </div>
             </div>
         </div>
 
