@@ -8,26 +8,26 @@
     {% if user_pending_invites %}
     <div class="mb-8">
         <h2 class="text-2xl font-bold mb-4 text-center">You Have Pending Invitations</h2>
-        <p class="text-gray-600 mb-6 text-center">Accept an invitation to join an existing workspace, or create your own below.</p>
+        <p class="text-steel mb-6 text-center">Accept an invitation to join an existing workspace, or create your own below.</p>
         
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="bg-slate-800 border border-steel/20 rounded-xl2 shadow-brand p-6 mb-6">
             <div class="space-y-4">
                 {% for invite in user_pending_invites %}
-                <div class="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div class="flex items-center justify-between p-4 bg-grape/10 border border-grape/30 rounded-xl2">
                     <div class="flex-1">
-                        <div class="font-medium text-gray-900">{{ invite.workspace.name }}</div>
-                        <div class="text-sm text-gray-500">
+                        <div class="font-medium text-cloud">{{ invite.workspace.name }}</div>
+                        <div class="text-sm text-steel">
                             Invited {{ invite.created_at|timesince }} ago by {{ invite.invited_by.first_name|default:invite.invited_by.username }}
                         </div>
                     </div>
                     
                     <div class="flex gap-3 ml-4">
                         <button onclick="handleInvite({{ invite.id }}, 'accept')" 
-                                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors">
+                                class="px-4 py-2 bg-pistachio hover:bg-pistachio/90 text-white text-sm rounded-xl2 transition-colors shadow-success-glow">
                             Accept
                         </button>
                         <button onclick="handleInvite({{ invite.id }}, 'reject')" 
-                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors">
+                                class="px-4 py-2 bg-melon hover:bg-melon/90 text-white text-sm rounded-xl2 transition-colors shadow-danger-glow">
                             Reject
                         </button>
                     </div>
@@ -44,27 +44,27 @@
             {% if user_pending_invites %}Or Create Your Own Workspace{% else %}Create Your First Workspace{% endif %}
         </h1>
         {% if not user_pending_invites %}
-        <p class="text-gray-600 mb-6 text-center">Workspaces help you organize your tasks and collaborate with others.</p>
+        <p class="text-steel mb-6 text-center">Workspaces help you organize your tasks and collaborate with others.</p>
         {% endif %}
         
-        <form method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+        <form method="post" class="bg-slate-800 border border-steel/20 rounded-xl2 shadow-brand px-8 pt-6 pb-8">
             {% csrf_token %}
             
             <div class="mb-4">
-                <label for="id_name" class="block text-gray-700 text-sm font-bold mb-2">
+                <label for="id_name" class="block text-cloud text-sm font-medium mb-2">
                     Workspace Name
                 </label>
                 <input type="text" 
                        name="name" 
                        id="id_name" 
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       class="w-full px-3 py-2 border border-steel/30 rounded-xl2 focus:ring-2 focus:ring-blueberry focus:border-blueberry bg-gray-600 text-gray-200 shadow-sm transition-colors hover:border-steel/50"
                        placeholder="My Workspace"
                        required>
             </div>
             
             <div class="flex items-center justify-between">
                 <button type="submit" 
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+                        class="w-full px-4 py-2 bg-blueberry hover:bg-blueberry/90 text-white font-medium rounded-xl2 transition-colors shadow-primary-glow">
                     Create Workspace
                 </button>
             </div>

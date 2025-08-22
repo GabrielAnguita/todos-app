@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - Server Error | Todos App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍌</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nightsky: '#0E1726',
+                        cloud: '#F7F7FB',
+                        steel: '#6B7280',
+                        blueberry: '#4F46E5',
+                        melon: '#F97360',
+                        pistachio: '#10B981',
+                        grape: '#7C3AED'
+                    },
+                    borderRadius: {
+                        'xl2': '1.0rem',
+                    },
+                    boxShadow: {
+                        brand: '0 10px 20px rgba(14,23,38,0.15)',
+                        'primary-glow': '0 6px 14px rgba(79,70,229,.28)',
+                        'danger-glow': '0 6px 14px rgba(249,115,96,.25)'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-nightsky text-cloud min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl mx-auto px-4 text-center">
+        <!-- Large 500 with banana and broken emoji -->
+        <div class="mb-8">
+            <div class="text-9xl mb-4">🍌</div>
+            <h1 class="text-8xl font-bold text-melon mb-4">500</h1>
+            <div class="text-6xl mb-6">💥</div>
+        </div>
+        
+        <!-- Error message -->
+        <div class="bg-slate-800 border border-steel/20 rounded-xl2 shadow-brand p-8 mb-8">
+            <h2 class="text-3xl font-bold text-cloud mb-4">Something Went Banana-Shaped!</h2>
+            <p class="text-steel text-lg mb-6 leading-relaxed">
+                Our server encountered an unexpected error and couldn't complete your request. 🍌💔<br>
+                Don't worry - it's not you, it's us! Our team has been notified.
+            </p>
+            
+            <!-- Error details -->
+            <div class="text-left bg-melon/10 border border-melon/30 rounded-xl2 p-6 mb-6">
+                <h3 class="text-xl font-semibold text-melon mb-4">What happened?</h3>
+                <div class="space-y-3 text-steel">
+                    <div class="flex items-start gap-3">
+                        <span class="text-melon text-lg">⚠️</span>
+                        <span>An internal server error occurred while processing your request</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-melon text-lg">🔧</span>
+                        <span>Our engineering team has been automatically notified</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-melon text-lg">⏰</span>
+                        <span>We're working to fix this as quickly as possible</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- What users can do -->
+            <div class="text-left bg-slate-700 border border-steel/20 rounded-xl2 p-6 mb-6">
+                <h3 class="text-xl font-semibold text-cloud mb-4">What you can do:</h3>
+                <ul class="space-y-2 text-steel">
+                    <li class="flex items-center gap-3">
+                        <span class="text-blueberry">•</span>
+                        Try refreshing the page in a few minutes
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-pistachio">•</span>
+                        Go back to the previous page
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-grape">•</span>
+                        Return to the homepage and try again
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-melon">•</span>
+                        If the issue persists, please contact our support team
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="location.reload()" 
+                        class="px-6 py-3 bg-pistachio hover:bg-pistachio/90 text-white rounded-xl2 transition-colors font-medium">
+                    🔄 Try Again
+                </button>
+                <button onclick="history.back()" 
+                        class="px-6 py-3 bg-steel hover:bg-steel/90 text-white rounded-xl2 transition-colors font-medium">
+                    ← Go Back
+                </button>
+                <a href="/" 
+                   class="px-6 py-3 bg-blueberry hover:bg-blueberry/90 text-white rounded-xl2 transition-colors font-medium shadow-primary-glow inline-block">
+                    🏠 Go Home
+                </a>
+            </div>
+        </div>
+        
+        <!-- Technical info for developers -->
+        <div class="bg-grape/10 border border-grape/30 rounded-xl2 p-6">
+            <p class="text-grape text-sm">
+                <strong>Error Code:</strong> HTTP 500 Internal Server Error<br>
+                <strong>Time:</strong> <span id="error-time"></span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Display current time
+        document.getElementById('error-time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>
