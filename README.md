@@ -44,11 +44,11 @@ Nota: posteriormente ocupé unas 2 horas más en hacer una refactorización del 
 - Aunque tiene un diseño robusto, aún está lejos de tener grado productivo, faltan: tests, monitoreo de errores (Sentry?), respaldo de DB, documentación de API, pipeline de CI/CD, y más.
 
 ### Frontend
-- Permití que Cloud Code explorara libremente la implementación, pinponeando el aspecto del sitio pero con una expectativa clara de su comportamiento.
+- Permití que Claude Code explorara libremente la implementación, pinponeando el aspecto del sitio pero con una expectativa clara de su comportamiento.
 - El frontend actual es **mínimamente funcional** y sirve solo para ilustrar la experiencia.  
 - En un proyecto productivo hubiera optado por **React + TypeScript**, dado que hay bastante lógica en el cliente.  
 - La experiencia de usuario sí fue diseñada por mí: cómo debía sentirse y fluir la interacción.
-- En resumen el frontend necesitaría una refactorización urgente y dedicarle tiempo real de diseño.
+- En resumen, de haber sido un desarrollo con fin productivo habría merecido ser diseñado desde el comienzo.
 
 ### Tests
 ⚠️ Este proyecto **no tiene ningún test automatizado**.  
