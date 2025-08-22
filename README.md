@@ -32,6 +32,7 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 
 Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo claro:  
 **probar una idea de experiencia de usuario y una arquitectura backend sólida en poco tiempo.**
+Nota: posteriormente ocupé unas 2 horas más en hacer una refactorización del backend y 2 más en elegir otra paleta de colores.
 
 - Gran parte del código fue generado con **Claude Code**, lo que permitió acelerar la implementación.
 
