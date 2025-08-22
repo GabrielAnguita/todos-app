@@ -40,7 +40,6 @@ Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo cla
 - Todas las **decisiones técnicas** fueron tomadas por mí.  
 - Usé **Redis** tanto como **cola de tareas para Celery** como **channel layer para WebSockets**, simplificando infraestructura y habilitando el **fanout de actualizaciones en tiempo real**.  
 - La arquitectura fue pensada desde el principio para ser escalable: hoy corre en un solo nodo, pero puede distribuirse en múltiples nodos sin cambios de diseño.
-- Hay 2 pendientes "urgentes": hacer tests, y mover lógica que existe en vistas a capa de servicios.
 
 ### Frontend
 - Permití que Cloud Code explorara libremente la implementación.  

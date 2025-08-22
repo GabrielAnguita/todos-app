@@ -35,7 +35,7 @@ class TaskService:
     
     @staticmethod
     def user_can_edit_task(user, task):
-        return TaskService.user_can_access_workspace(user, task.workspace)
+        return task.can_be_edited_by(user)
     
     @staticmethod
     def create_task(
@@ -65,38 +65,54 @@ class TaskService:
     
     @staticmethod
     def update_task(task, user, **update_data):
-        if not TaskService.user_can_edit_task(user, task):
+        if not task.can_be_edited_by(user):
             raise PermissionDenied("You don't have permission to edit this task")
+        
         if 'assigned_user' in update_data:
-            assigned_user = update_data['assigned_user']
-            if assigned_user and not TaskService.user_can_access_workspace(assigned_user, task.workspace):
-                raise ValidationError("Assigned user must be a workspace member")
+            task.assign_to(update_data.pop('assigned_user'))
+        
+        if 'completed' in update_data:
+            completed = update_data.pop('completed')
+            if completed:
+                task.mark_completed()
+            else:
+                task.mark_incomplete()
+        
         for field, value in update_data.items():
             if hasattr(task, field):
                 setattr(task, field, value)
-        task.save()
+        
+        if update_data:
+            task.save()
+        
         return task
     
     @staticmethod
     def delete_task(task, user):
-        if not TaskService.user_can_edit_task(user, task):
+        if not task.can_be_edited_by(user):
             raise PermissionDenied("You don't have permission to delete this task")
-        
-        with transaction.atomic():
-            task.delete()
+        task.delete()
     
     @staticmethod
     def assign_task(task, user, assigned_user=None):
-        return TaskService.update_task(task, user, assigned_user=assigned_user)
+        if not task.can_be_edited_by(user):
+            raise PermissionDenied("You don't have permission to assign this task")
+        task.assign_to(assigned_user)
+        return task
     
     @staticmethod
     def toggle_task_completion(task, user):
-        new_status = not task.completed
-        return TaskService.update_task(task, user, completed=new_status)
+        if not task.can_be_edited_by(user):
+            raise PermissionDenied("You don't have permission to edit this task")
+        if task.completed:
+            task.mark_incomplete()
+        else:
+            task.mark_completed()
+        return task
     
     @staticmethod
     def estimate_task_time(task, user):
-        if not TaskService.user_can_edit_task(user, task):
+        if not task.can_be_edited_by(user):
             raise PermissionDenied("You don't have permission to estimate this task")
         update_task_estimated_time.delay(task.id)
         return {"message": "Task estimation started"}
@@ -110,7 +126,7 @@ class TaskService:
         except Task.DoesNotExist:
             raise Task.DoesNotExist("Task not found")
         
-        if not TaskService.user_can_edit_task(user, task):
+        if not task.can_be_edited_by(user):
             raise PermissionDenied("You don't have access to this task")
         
         return task

@@ -47,7 +47,7 @@
         <p class="text-steel mb-6 text-center">Workspaces help you organize your tasks and collaborate with others.</p>
         {% endif %}
         
-        <form id="create-workspace-form" method="post" action="{% url 'api_create_workspace' %}" class="bg-slate-800 border border-steel/20 rounded-xl2 shadow-brand px-8 pt-6 pb-8">
+        <form method="post" class="bg-slate-800 border border-steel/20 rounded-xl2 shadow-brand px-8 pt-6 pb-8">
             {% csrf_token %}
             
             <div class="mb-4">
@@ -71,38 +71,4 @@
         </form>
     </div>
 </div>
-
-
-<script>
-// Initialize form handlers when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    handleApiFormSubmit('create-workspace-form', {
-        onSuccess: (data) => {
-            window.location.href = `/workspace/${data.id}/`;
-        },
-        errorMessage: 'Failed to create workspace. Please try again.'
-    });
-});
-
-// Handle invite acceptance/rejection using form submission to API
-function handleInvite(inviteId, action) {
-    if (confirm(`Are you sure you want to ${action} this invitation?`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/workspaces/api/invites/${inviteId}/${action}/`;
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = 'csrfmiddlewaretoken';
-            csrfInput.value = csrfToken.value;
-            form.appendChild(csrfInput);
-        }
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-</script>
 {% endblock %}

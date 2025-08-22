@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from workspaces.models import WorkspaceMember
 from .managers import TaskQuerySet
 
@@ -26,4 +27,18 @@ class Task(models.Model):
         return self.title
     
     def can_be_edited_by(self, user):
-        return WorkspaceMember.objects.filter(workspace=self.workspace, user=user).exists()        
+        return WorkspaceMember.objects.filter(workspace=self.workspace, user=user).exists()
+    
+    def assign_to(self, user):
+        if user and not self.can_be_edited_by(user):
+            raise ValidationError("Assigned user must be a workspace member")
+        self.assigned_user = user
+        self.save(update_fields=['assigned_user'])
+    
+    def mark_completed(self):
+        self.completed = True
+        self.save(update_fields=['completed'])
+    
+    def mark_incomplete(self):
+        self.completed = False
+        self.save(update_fields=['completed'])

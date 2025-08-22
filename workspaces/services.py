@@ -16,10 +16,8 @@ class WorkspaceService:
     
     @staticmethod
     def create_workspace(owner, name):
-        """Create a new workspace with the owner as the first member."""
         with transaction.atomic():
             workspace = Workspace.objects.create(owner=owner, name=name)
-            # Add owner as member
             WorkspaceMember.objects.create(workspace=workspace, user=owner)
         return workspace
     
@@ -45,36 +43,26 @@ class WorkspaceService:
 
 
 class InviteService:
-    """Service class for invitation operations."""
-    
     @staticmethod
     def create_invite(workspace, email, invited_by):
-        """Create a new invitation to a workspace."""
-        # Permission check
         if not WorkspaceService.user_can_invite_to_workspace(invited_by, workspace):
             raise PermissionDenied("You don't have permission to invite users to this workspace")
-        
-        # Validate email
+
         if not email or not email.strip():
             raise ValidationError("Email address is required")
-        
+
         email = email.strip().lower()
-        
-        # Check if user is already a member
         try:
             user = User.objects.get(email=email)
             if WorkspaceMember.objects.filter(workspace=workspace, user=user).exists():
                 raise ValidationError(f"{email} is already a member of this workspace")
         except User.DoesNotExist:
             pass  # User doesn't exist, but we can still send invite
-        
-        # Check for existing pending invitation
+
         existing_invite = Invite.objects.for_workspace(workspace).for_email(email).pending().first()
-        
         if existing_invite:
             raise ValidationError(f"A pending invitation to {email} already exists for this workspace")
-        
-        # Create new invitation
+
         with transaction.atomic():
             invite = Invite.objects.create(
                 workspace=workspace,
@@ -82,55 +70,28 @@ class InviteService:
                 invited_by=invited_by,
                 status='pending'
             )
-            
-            # TODO: Send email notification
-            
         return invite
     
     @staticmethod
     def accept_invite(invite, user):
-        """Accept a workspace invitation."""
-        # Validate user can accept this invite
         if invite.email != user.email:
             raise PermissionDenied("You can only accept invitations sent to your email address")
         
-        if invite.status != 'pending':
-            raise ValidationError("This invitation is no longer pending")
-        
         with transaction.atomic():
-            # Check if user is already a member (race condition protection)
             if WorkspaceMember.objects.filter(workspace=invite.workspace, user=user).exists():
                 raise ValidationError(f"You are already a member of {invite.workspace.name}")
             
-            # Add user to workspace
             WorkspaceMember.objects.create(workspace=invite.workspace, user=user)
-            
-            # Mark invite as accepted
-            invite.status = 'accepted'
-            invite.responded_at = timezone.now()
-            invite.save()
-            
-            # TODO: Send notifications
+            invite.accept()
             
         return invite.workspace
     
     @staticmethod
     def reject_invite(invite, user):
-        """Reject a workspace invitation."""
-        # Validate user can reject this invite
         if invite.email != user.email:
             raise PermissionDenied("You can only reject invitations sent to your email address")
         
-        if invite.status != 'pending':
-            raise ValidationError("This invitation is no longer pending")
-        
-        with transaction.atomic():
-            invite.status = 'rejected'
-            invite.responded_at = timezone.now()
-            invite.save()
-            
-            # TODO: Send notifications
-            
+        invite.reject()
         return invite
     
     @staticmethod

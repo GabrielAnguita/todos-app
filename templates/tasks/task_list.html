@@ -131,7 +131,7 @@
                         </button>
                     </div>
                     
-                    <form id="create-task-form" method="post" action="{% url 'api_create_task' workspace_id=current_workspace.id %}" class="space-y-4">
+                    <form method="post" action="{% url 'create_task' workspace_id=current_workspace.id %}" class="space-y-4">
                         {% csrf_token %}
                         <div>
                             <label for="workspace_select" class="block text-sm font-medium text-cloud mb-2">Workspace</label>
@@ -309,43 +309,5 @@ function removeTaskFromList(taskId) {
 function navigateToTask(taskId) {
     window.location.href = `/tasks/${taskId}/`;
 }
-
-// Initialize form handlers when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('create-task-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Reset form
-                this.reset();
-                
-                // Close modal first
-                const modal = document.querySelector('[x-data]');
-                if (modal && modal._x_dataStack) {
-                    modal._x_dataStack[0].showCreateModal = false;
-                }
-                // Then reload
-                setTimeout(() => window.location.reload(), 100);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to create task. Please try again.');
-            });
-        });
-    }
-});
-
 </script>
 {% endblock %}

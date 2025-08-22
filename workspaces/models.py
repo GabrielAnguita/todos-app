@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 from .managers import WorkspaceQuerySet, WorkspaceMemberQuerySet, InviteQuerySet
 
 
@@ -62,3 +64,17 @@ class Invite(models.Model):
     @property
     def is_rejected(self):
         return self.status == 'rejected'
+    
+    def accept(self):
+        if not self.is_pending:
+            raise ValidationError("This invitation is no longer pending")
+        self.status = 'accepted'
+        self.responded_at = timezone.now()
+        self.save(update_fields=['status', 'responded_at'])
+    
+    def reject(self):
+        if not self.is_pending:
+            raise ValidationError("This invitation is no longer pending")
+        self.status = 'rejected'
+        self.responded_at = timezone.now()
+        self.save(update_fields=['status', 'responded_at'])
