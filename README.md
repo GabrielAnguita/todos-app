@@ -42,7 +42,7 @@ Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo cla
 - La arquitectura fue pensada desde el principio para ser escalable: hoy corre en un solo nodo, pero puede distribuirse en múltiples nodos sin cambios de diseño.
 
 ### Frontend
-- Permití que Cloud Code explorara libremente la implementación.  
+- Permití que Cloud Code explorara libremente la implementación, pinponeando el aspecto del sitio pero con una espectativa clara de su comportamiento.
 - El frontend actual es **mínimamente funcional** y sirve solo para ilustrar la experiencia.  
 - En un proyecto productivo hubiera optado por **React + TypeScript**, dado que hay bastante lógica en el cliente.  
 - La experiencia de usuario sí fue diseñada por mí: cómo debía sentirse y fluir la interacción.
