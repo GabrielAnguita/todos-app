@@ -81,9 +81,7 @@ class TaskService:
     def delete_task(task, user):
         if not TaskService.user_can_edit_task(user, task):
             raise PermissionDenied("You don't have permission to delete this task")
-        
-        with transaction.atomic():
-            task.delete()
+        task.delete()
     
     @staticmethod
     def assign_task(task, user, assigned_user=None):

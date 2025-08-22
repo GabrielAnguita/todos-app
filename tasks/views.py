@@ -100,11 +100,27 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         user_workspaces = WorkspaceService.get_user_workspaces(self.request.user)
         return get_object_or_404(user_workspaces, id=self.kwargs['workspace_id'])
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['workspace'] = self.get_workspace()
+        return kwargs
+    
     def form_valid(self, form):
         workspace = self.get_workspace()
         form.instance.workspace = workspace
         form.instance.created_by = self.request.user
-        return super().form_valid(form)
+        assigned_user_id = form.cleaned_data.get('assigned_user_id')
+        if assigned_user_id:
+            form.instance.assigned_user_id = assigned_user_id
+        response = super().form_valid(form)
+        messages.success(self.request, f'Task "{form.instance.title}" created successfully!')
+        return response
+    
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return redirect(self.get_success_url())
     
     def get_success_url(self):
         return reverse('task_list', kwargs={'workspace_id': self.kwargs['workspace_id']})
