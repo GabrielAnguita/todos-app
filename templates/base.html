@@ -494,7 +494,7 @@
                         </button>
                     </div>
                     
-                    <form method="post" action="{% url 'invite_form' workspace_id=current_workspace.id %}" class="space-y-4">
+                    <form id="global-invite-form" method="post" action="{% url 'api_invite_user' workspace_id=current_workspace.id %}" class="space-y-4">
                         {% csrf_token %}
                         <div>
                             <label for="global_invite_email" class="block text-sm font-medium text-cloud mb-2">Email Address</label>
@@ -520,6 +520,59 @@
     {% endif %}
 
     <script>
+    // Reusable API form submission handler
+    function handleApiFormSubmit(formId, options = {}) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset form
+                this.reset();
+                
+                // Execute custom success callback or default behavior
+                if (options.onSuccess) {
+                    options.onSuccess(data);
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const message = options.errorMessage || 'Operation failed. Please try again.';
+                alert(message);
+            });
+        });
+    }
+
+    // Initialize global form handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        handleApiFormSubmit('global-invite-form', {
+            onSuccess: (data) => {
+                // Close modal first
+                const modal = document.querySelector('[x-data]');
+                if (modal && modal._x_dataStack) {
+                    modal._x_dataStack[0].showInviteModal = false;
+                }
+                // Then show success message
+                setTimeout(() => alert(`Invitation sent successfully!`), 100);
+            },
+            errorMessage: 'Failed to send invitation. Please try again.'
+        });
+    });
+
     // Handle invite accept/reject
     function handleInvite(inviteId, action) {
         if (confirm(`Are you sure you want to ${action} this invitation? (You can be part of multiple workspaces)`)) {

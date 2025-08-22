@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from .managers import WorkspaceQuerySet, WorkspaceMemberQuerySet, InviteQuerySet
 
 
 class Workspace(models.Model):
@@ -7,6 +8,8 @@ class Workspace(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_workspaces')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = WorkspaceQuerySet.as_manager()
 
     def __str__(self):
         return self.name
@@ -16,6 +19,8 @@ class WorkspaceMember(models.Model):
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='members')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='workspace_memberships')
     joined_at = models.DateTimeField(auto_now_add=True)
+
+    objects = WorkspaceMemberQuerySet.as_manager()
 
     class Meta:
         unique_together = ('workspace', 'user')
@@ -38,8 +43,10 @@ class Invite(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     responded_at = models.DateTimeField(null=True, blank=True)
 
+    objects = InviteQuerySet.as_manager()
+
     class Meta:
-        pass  # Removed unique_together to allow re-invites after rejection
+        pass
 
     def __str__(self):
         return f"Invite to {self.workspace.name} for {self.email} ({self.status})"

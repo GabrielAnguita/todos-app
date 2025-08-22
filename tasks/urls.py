@@ -1,5 +1,6 @@
 from django.urls import path
-from . import views, api_views
+from . import views
+from .api import views as api_views
 
 urlpatterns = [
     path('', views.WorkspaceRedirectView.as_view(), name='workspace_redirect'),
@@ -9,6 +10,7 @@ urlpatterns = [
     path('tasks/<int:task_id>/delete/', views.TaskDeleteView.as_view(), name='delete_task'),
     
     # API endpoints
+    path('api/workspace/<int:workspace_id>/tasks/', api_views.create_task, name='api_create_task'),
     path('api/tasks/<int:task_id>/', api_views.update_task, name='api_update_task'),
     path('api/tasks/<int:task_id>/estimate/', api_views.estimate_task, name='api_estimate_task'),
 ]

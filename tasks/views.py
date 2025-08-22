@@ -3,19 +3,20 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, CreateView, RedirectView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.http import Http404
-from django.db import models
+from django.core.exceptions import PermissionDenied
+from django.contrib import messages
+
 from workspaces.models import Workspace, WorkspaceMember
+from workspaces.services import WorkspaceService
 from .models import Task
 from .forms import TaskCreateForm
+from .services import TaskService
 from functools import cached_property
 
 
 class WorkspaceRedirectView(LoginRequiredMixin, RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        user_workspaces = Workspace.objects.filter(
-            models.Q(owner=self.request.user) | 
-            models.Q(members__user=self.request.user)
-        ).distinct()
+        user_workspaces = WorkspaceService.get_user_workspaces(self.request.user)
         
         if not user_workspaces.exists():
             return reverse('create_workspace')
@@ -29,15 +30,22 @@ class TaskListView(LoginRequiredMixin, ListView):
     context_object_name = 'tasks'
     
     def get_queryset(self):
-        workspace = self.get_workspace()
-        return Task.objects.filter(workspace=workspace).select_related(
-            'assigned_user', 'created_by'
-        ).order_by('-created_at')
+        try:
+            workspace = self.get_workspace()
+            return TaskService.get_workspace_tasks(workspace, self.request.user)
+        except PermissionDenied:
+            raise Http404("Workspace not found")
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         current_workspace = self.get_workspace()
-        workspace_members = current_workspace.members.select_related('user').all()
+        try:
+            workspace_members = WorkspaceService.get_workspace_members(
+                current_workspace, self.request.user
+            )
+        except PermissionDenied:
+            raise Http404("Workspace not found")
+            
         context.update({
             'workspaces': self.user_workspaces,
             'current_workspace': current_workspace,
@@ -52,10 +60,7 @@ class TaskListView(LoginRequiredMixin, ListView):
 
     @cached_property
     def user_workspaces(self):
-        return Workspace.objects.filter(
-                models.Q(owner=self.request.user) | 
-                models.Q(members__user=self.request.user)
-            ).distinct()
+        return WorkspaceService.get_user_workspaces(self.request.user)
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -65,22 +70,25 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
     pk_url_kwarg = 'task_id'
     
     def get_queryset(self):
-        return Task.objects.select_related('workspace', 'assigned_user', 'created_by')
+        return Task.objects.with_user_data()
     
     def get_object(self, queryset=None):
-        task = super().get_object(queryset)
-        
-        # Check permissions
-        if not (task.workspace.owner == self.request.user or 
-                WorkspaceMember.objects.filter(workspace=task.workspace, user=self.request.user).exists()):
+        try:
+            return TaskService.get_task_with_permissions(
+                self.kwargs['task_id'], self.request.user
+            )
+        except (Task.DoesNotExist, PermissionDenied):
             raise Http404("Task not found")
-        
-        return task
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        workspace_members = self.object.workspace.members.select_related('user').all()
-        context['workspace_members'] = workspace_members
+        try:
+            workspace_members = WorkspaceService.get_workspace_members(
+                self.object.workspace, self.request.user
+            )
+            context['workspace_members'] = workspace_members
+        except PermissionDenied:
+            raise Http404("Task not found")
         return context
 
 
@@ -89,14 +97,8 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     form_class = TaskCreateForm
     
     def get_workspace(self):
-        workspace = get_object_or_404(Workspace, id=self.kwargs['workspace_id'])
-        
-        # Check permissions
-        if not (workspace.owner == self.request.user or 
-                WorkspaceMember.objects.filter(workspace=workspace, user=self.request.user).exists()):
-            raise Http404("Workspace not found")
-        
-        return workspace
+        user_workspaces = WorkspaceService.get_user_workspaces(self.request.user)
+        return get_object_or_404(user_workspaces, id=self.kwargs['workspace_id'])
     
     def form_valid(self, form):
         workspace = self.get_workspace()
@@ -113,17 +115,15 @@ class TaskDeleteView(LoginRequiredMixin, DeleteView):
     pk_url_kwarg = 'task_id'
     
     def get_queryset(self):
-        return Task.objects.select_related('workspace', 'assigned_user', 'created_by')
+        return Task.objects.with_user_data()
     
     def get_object(self, queryset=None):
-        task = super().get_object(queryset)
-        
-        # Check permissions
-        if not (task.workspace.owner == self.request.user or 
-                WorkspaceMember.objects.filter(workspace=task.workspace, user=self.request.user).exists()):
+        try:
+            return TaskService.get_task_with_permissions(
+                self.kwargs['task_id'], self.request.user
+            )
+        except (Task.DoesNotExist, PermissionDenied):
             raise Http404("Task not found")
-        
-        return task
     
     def get_success_url(self):
         return reverse('task_list', kwargs={'workspace_id': self.object.workspace.id})

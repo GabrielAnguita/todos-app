@@ -1,5 +1,6 @@
 from django.db import models
 from workspaces.models import Workspace
+from workspaces.services import WorkspaceService, InviteService
 
 
 def workspace_context(request):
@@ -8,10 +9,7 @@ def workspace_context(request):
         return {}
     
     # Get all workspaces the user has access to
-    user_workspaces = Workspace.objects.filter(
-        models.Q(owner=request.user) | 
-        models.Q(members__user=request.user)
-    ).distinct()
+    user_workspaces = WorkspaceService.get_user_workspaces(request.user)
     
     # Try to get current workspace from URL
     current_workspace = None
@@ -36,13 +34,7 @@ def workspace_context(request):
                 pass
     
     # Get user's pending invites
-    user_pending_invites = []
-    if request.user.is_authenticated:
-        from workspaces.models import Invite
-        user_pending_invites = Invite.objects.filter(
-            email=request.user.email,
-            status='pending'
-        ).select_related('workspace', 'invited_by')
+    user_pending_invites = InviteService.get_pending_invites_for_user(request.user)
     
     # Generate consistent user colors for current workspace
     user_colors = {}
