@@ -11,7 +11,7 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 - Colaboración en tiempo real (sin necesidad de refrescar la página).  
 - Arquitectura escalable usando **Redis** como channel layer para WebSockets.  
 - **Redis** también se utilizó como **cola de tareas** para **Celery**, unificando la infraestructura.  
-- Fanout de actualizaciones de tareas en tiempo real gracias a Redis Channels.
+- Fanout de actualizaciones de tareas en tiempo real gracias a Redis Channels. (No implementé una lógica de reconciliación de versiones)
 - Autenticación mediante Google OAuth.
 
 ---
@@ -33,7 +33,7 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo claro:  
 **probar una idea de experiencia de usuario y una arquitectura backend sólida en poco tiempo.**
 
-- Gran parte del código fue generado con **Cloud Code**, lo que permitió acelerar la implementación.  
+- Gran parte del código fue generado con **Claude Code**, lo que permitió acelerar la implementación.
 
 ### Backend
 - Toda la **arquitectura** fue diseñada por mí.  
@@ -45,7 +45,8 @@ Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo cla
 - Permití que Cloud Code explorara libremente la implementación.  
 - El frontend actual es **mínimamente funcional** y sirve solo para ilustrar la experiencia.  
 - En un proyecto productivo hubiera optado por **React + TypeScript**, dado que hay bastante lógica en el cliente.  
-- La experiencia de usuario sí fue diseñada por mí: cómo debía sentirse y fluir la interacción.  
+- La experiencia de usuario sí fue diseñada por mí: cómo debía sentirse y fluir la interacción.
+- En resumen el frontend necesitaría una refactorización urgente y dedicarle tiempo real de diseño.
 
 ### Tests
 ⚠️ Este proyecto **no tiene ningún test automatizado**.  
