@@ -30,15 +30,14 @@ Construida con **Django**, utilizando **WebSockets** y **Redis** para la comunic
 
 ## 📝 Notas de desarrollo
 
-Este proyecto se desarrolló en aproximadamente **10 horas** con un objetivo claro:  
+Este proyecto se desarrolló en aproximadamente **14 horas** con un objetivo claro:  
 **probar una idea de experiencia de usuario y una arquitectura backend sólida en poco tiempo.**
-Nota: posteriormente ocupé unas 2 horas más en hacer una refactorización del backend y 2 más en elegir otra paleta de colores.
+
 
 - Gran parte del código fue generado con **Claude Code**, lo que permitió acelerar la implementación.
 
 ### Backend
 - Toda la **arquitectura** fue diseñada por mí.  
-- Todas las **decisiones técnicas** fueron tomadas por mí.  
 - Usé **Redis** tanto como **cola de tareas para Celery** como **channel layer para WebSockets**, simplificando infraestructura y habilitando el **fanout de actualizaciones en tiempo real**.  
 - La arquitectura fue pensada desde el principio para ser escalable: hoy corre en un solo nodo, pero puede distribuirse en múltiples nodos sin cambios de diseño.
 - Aunque tiene un diseño robusto, aún está lejos de tener grado productivo, faltan: tests, monitoreo de errores (Sentry?), respaldo de DB, documentación de API, pipeline de CI/CD, y más.
